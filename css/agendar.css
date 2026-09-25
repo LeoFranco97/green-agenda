@@ -1,0 +1,827 @@
+/* Green Agenda, módulo estilo: css/agendar.css
+   Fluxo "Agendar" em passos (docs/redesign/DIRECAO.md, seção 3.4): o cartão de
+   760 px com o indicador de passo, a grade de cartões de tipo de serviço, o
+   par calendário do mês mais coluna de horários livres, o gesto de dividir o
+   botão do horário em dois ao confirmar, e a tela de confirmação. Serve também
+   aos cartões de "Tipos de serviço" (3.6) e à tela "Disponibilidade" (3.5).
+
+   Dono: lote 5 (css/agendar.css, src/agendamento.js e src/recursos.js). O
+   lote 1 só cria o arquivo e o liga no index.html e no pré-cache do sw.js;
+   ele nasce sem nenhuma regra.
+
+   Regras de convivência:
+   - classe nova deste fluxo nasce aqui, não em css/componentes.css;
+   - nenhuma cor hexadecimal fora de css/tokens.css, sempre var(--token);
+   - três intensidades do acento, com papel fixo (seção 2.2): preenchimento
+     sólido para o estado final, contorno mais texto para o disponível, tinta
+     leve para o possível;
+   - botão de horário com contorno em --borda-forte, que é o degrau que tem
+     3:1; --borda é fio decorativo e não serve de contorno de controle;
+   - hora em tabular-nums, sempre, porque a Inter é proporcional por padrão;
+   - alvo de toque de 44 px ou mais: os dois botões do gesto de confirmar
+     ficam em 48 px de altura mesmo em 375 px de tela;
+   - nada da marca do Calendly: sem azul, sem nome, sem ilustração, sem texto
+     copiado. Copia-se a estrutura e a função, nunca a marca.
+
+   Direção 2 de 22/09/2026 (docs/redesign/DIRECAO-2.md, seção 7 e lote 4): as
+   medidas do calendário e da coluna de horários foram levadas ao que a
+   referência mede. Círculo do dia de 44 px em célula de 48 px, 8 px entre as
+   linhas de semana, e botão de horário de 52 px com vão de 20 px no desktop.
+   No celular o botão fica em 48 px com vão de 12 px, porque a tela é curta e
+   um passo de 72 px empurraria a tarde inteira para fora. O fluxo de quatro
+   passos foi aposentado (o cartão agora é o de css/registrar.css), e o que
+   sobrou aqui serve ao par calendário mais horários de #/servico/novo, do
+   reagendar, aos cartões de tipo e à Disponibilidade.
+
+   Esta folha é carregada depois de css/telas.css, então vence o empate de
+   especificidade com as folhas herdadas. Não precise de !important.
+
+   Índice:
+   1. Cartão do fluxo e indicador de passo
+   2. Cartões de tipo de serviço (passo 1 e tela Tipos)
+   3. Par calendário mais horários
+   4. Calendário do mês
+   5. Coluna de horários livres e o gesto de confirmar
+   6. Passo do cliente, confirmação e mensagens
+   7. Disponibilidade (3.5)
+   8. Movimento reduzido */
+
+/* ================================================================== */
+/* 1. Cartão do fluxo e indicador de passo                             */
+/* ================================================================== */
+
+.agendar { width: 100%; max-width: 760px; margin: 0 auto; }
+
+.agendar-cartao {
+  background: var(--card);
+  border: 1px solid var(--borda);
+  border-radius: var(--r-m);
+  padding: var(--e5);
+}
+
+/* Em tela estreita o cartão aperta o respiro lateral, para o calendário caber com os
+   círculos de 44 px e os dois botões do gesto de confirmar continuarem acima de 44 px. */
+@media (max-width: 480px) {
+  .agendar-cartao { padding: var(--e4); }
+}
+
+/* Altura mínima do cartão (DIRECAO-2, seção 7): o rodapé e o par de colunas não
+   dançam a cada gaveta que abre. Só no desktop, porque no celular a tela é o cartão. */
+@media (min-width: 720px) {
+  .agendar-cartao { min-height: 560px; }
+}
+
+.agendar-topo {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  margin-bottom: var(--e4);
+}
+
+.agendar-topo .btn-icone { flex: none; margin-left: calc(var(--e2) * -1); }
+
+.agendar-voltar-texto { display: none; }
+/* Celular: o cabeçalho já tem a seta de sair do fluxo. Duas setas empilhadas
+   confundiam; a do cartão vira o texto "Passo anterior", em linha própria. */
+@media (max-width: 719px) {
+  .agendar-topo { flex-wrap: wrap; row-gap: 0; }
+  .agendar-topo .agendar-voltar {
+    flex: 0 0 100%;
+    width: auto;
+    height: auto;
+    min-height: 44px;
+    margin-left: 0;
+    justify-content: flex-start;
+    border-radius: var(--r-s);
+    color: var(--acao);
+    font-size: var(--t-14);
+    font-weight: 600;
+    background: none;
+  }
+  .agendar-topo .agendar-voltar .icone { display: none; }
+  .agendar-voltar-texto { display: inline; text-decoration: underline; text-underline-offset: 3px; }
+}
+
+.agendar-titulo {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--t-20);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.agendar-sub {
+  display: block;
+  font-size: var(--t-14);
+  font-weight: 400;
+  color: var(--texto-2);
+  line-height: 1.3;
+  margin-top: 2px;
+}
+
+/* Quatro pontos de 6 px, nunca uma barra de progresso grande (3.4). */
+.agendar-pontos { display: flex; align-items: center; gap: var(--e2); flex: none; }
+
+.agendar-ponto {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--borda-forte);
+  opacity: 0.5;
+}
+
+.agendar-ponto[data-atual] { background: var(--acao); opacity: 1; }
+.agendar-ponto[data-feito] { background: var(--acao); opacity: 0.55; }
+
+.agendar-secao + .agendar-secao { margin-top: var(--e5); }
+/* O checklist vem depois da caixa de observações: sem isto o rótulo colava na caixa. */
+.form-bloco + .agendar-secao { margin-top: var(--e5); }
+
+.agendar-rotulo {
+  font-size: var(--t-12);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--texto-3);
+  margin-bottom: var(--e2);
+}
+
+.agendar-nota {
+  font-size: var(--t-13);
+  line-height: 1.4;
+  color: var(--texto-2);
+  margin-top: var(--e2);
+}
+
+.agendar-rodape {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e2);
+  margin-top: var(--e5);
+  padding-top: var(--e4);
+  border-top: 1px solid var(--borda);
+}
+
+.agendar-rodape .agendar-avanco { margin-left: auto; }
+
+/* ================================================================== */
+/* 2. Cartões de tipo de serviço (passo 1 e tela Tipos, 3.6)           */
+/* ================================================================== */
+
+.tipos-grade {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--e4);
+}
+
+.cartao-tipo {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--e2);
+  width: 100%;
+  min-height: 132px;
+  padding: var(--e4);
+  padding-top: calc(var(--e4) + 4px);
+  background: var(--card);
+  border: 1px solid var(--borda);
+  border-radius: var(--r-m);
+  text-align: left;
+  color: var(--texto);
+  overflow: hidden;
+  transition: border-color var(--transicao), background var(--transicao), box-shadow var(--transicao);
+}
+
+button.cartao-tipo { cursor: pointer; }
+button.cartao-tipo:hover { border-color: var(--borda-forte); box-shadow: var(--sombra-1); }
+button.cartao-tipo:active { background: var(--fundo-2); }
+.cartao-tipo[data-ativo] { border-color: var(--acao); background: var(--oliva-suave); }
+
+/* Faixa de 4 px na cor do setor, no topo (2.3). */
+.cartao-tipo::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--cor-setor, var(--borda-forte));
+}
+
+.cartao-tipo[data-inativo] { opacity: 0.55; }
+.cartao-tipo[data-inativo]::before { background: var(--borda-forte); }
+
+.cartao-tipo-icone { color: var(--cor-setor, var(--acao)); }
+.cartao-tipo-nome { font-size: var(--t-16); font-weight: 600; line-height: 1.3; }
+
+.cartao-tipo-meta {
+  font-size: var(--t-14);
+  line-height: 1.4;
+  color: var(--texto-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.cartao-tipo-check { font-size: var(--t-13); color: var(--texto-3); margin-top: auto; }
+
+.cartao-tipo-interruptor { position: absolute; top: var(--e3); right: var(--e3); }
+
+.cartao-tipo-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+  margin-top: var(--e3);
+  padding-top: var(--e3);
+  border-top: 1px solid var(--borda);
+}
+
+/* Base de 120 px e min-width zero, não "auto": com três colunas em 1024 px o
+   cartão tem 193 px de miolo, e "Copiar link" mais "Editar" lado a lado
+   estouravam o overflow hidden do cartão, cortando a palavra "Editar" ao meio
+   (passada de crítica de 22/09/2026, lote 5). Agora, quando não cabem lado a
+   lado, cada botão pega a própria linha inteira. */
+.cartao-tipo-acoes .btn { flex: 1 1 120px; min-width: 0; justify-content: center; }
+
+.tipos-filtro { display: flex; flex-wrap: wrap; gap: var(--e2); margin-bottom: var(--e4); }
+/* No celular os chips de setor correm numa faixa só, de lado: quebrados em cinco
+   linhas eles empurravam o primeiro cartão para fora da primeira dobra. */
+@media (max-width: 639px) {
+  .tipos-filtro {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-left: calc(var(--e4) * -1);
+    margin-right: calc(var(--e4) * -1);
+    padding: 0 var(--e4);
+  }
+  .tipos-filtro::-webkit-scrollbar { display: none; }
+  .tipos-filtro > .chip { flex: none; }
+}
+
+@media (min-width: 640px) {
+  .tipos-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 900px) {
+  .tipos-grade { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* ================================================================== */
+/* 3. Par calendário mais horários (3.4)                               */
+/* ================================================================== */
+
+.agendar-duo { display: grid; grid-template-columns: 1fr; gap: var(--e5); }
+
+.agendar-duo-calendario { min-width: 0; }
+.agendar-duo-horarios { min-width: 0; }
+
+/* No celular os dois desempilham: um de cada vez, por data-etapa. */
+.agendar-duo[data-etapa="dia"] .agendar-duo-horarios { display: none; }
+.agendar-duo[data-etapa="hora"] .agendar-duo-calendario { display: none; }
+
+@media (min-width: 768px) {
+  .agendar-duo {
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: var(--e5);
+    align-items: start;
+  }
+  .agendar-duo[data-etapa] .agendar-duo-calendario,
+  .agendar-duo[data-etapa] .agendar-duo-horarios { display: block; }
+}
+
+/* Linha do recurso alocado pelo rodízio (4.7). */
+.agendar-recurso {
+  display: flex;
+  align-items: center;
+  gap: var(--e2);
+  flex-wrap: wrap;
+  padding: var(--e2) var(--e3);
+  background: var(--fundo-2);
+  border-radius: var(--r-s);
+  font-size: var(--t-14);
+  color: var(--texto-2);
+  margin-bottom: var(--e3);
+}
+
+.agendar-recurso-nome { font-weight: 600; color: var(--texto); }
+.agendar-recurso .btn { margin-left: auto; }
+/* Alvo de toque de 44 px no celular (o botão pequeno tinha 36). */
+@media (max-width: 719px) { .agendar-recurso .btn { min-height: 44px; min-width: 72px; } }
+
+.agendar-duracoes { display: flex; flex-wrap: wrap; gap: var(--e2); margin-bottom: var(--e3); }
+
+/* ================================================================== */
+/* 4. Calendário do mês                                                */
+/* ================================================================== */
+
+.cal-mes { width: 100%; }
+
+.cal-mes-cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--e2);
+  margin-bottom: var(--e3);
+}
+
+.cal-mes-rotulo {
+  flex: 1 1 auto;
+  text-align: center;
+  font-size: var(--t-16);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-mes-cab .btn-icone {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--r-pill);
+}
+
+.cal-mes-cab .btn-icone[disabled] { opacity: 0.35; }
+/* Seta de 36 px com alvo de toque de 44: a área invisível cresce 4 px em volta. */
+.cal-mes-cab .btn-icone::after { content: ""; position: absolute; inset: -4px; }
+
+/* Sete colunas de larguras iguais, sem vão lateral: o ar entre os dias é a
+   sobra da célula de 48 px em volta do círculo de 44 px, como na referência.
+   Vão lateral aqui faria o círculo de 44 px estourar os 375 px de tela. */
+.cal-semana, .cal-dias {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  column-gap: 0;
+}
+
+/* 8 px entre as linhas de semana (DIRECAO-2, seção 7). O align-content: start
+   segura a célula em 48 px quando o mês tem cinco linhas e a altura mínima
+   sobra: a sobra fica embaixo, e não esticando os dias. */
+.cal-dias {
+  row-gap: var(--e2);
+  align-content: start;
+  /* Seis linhas de 48 px mais cinco vãos de 8 px: o mês de cinco semanas não
+     encolhe a grade e o calendário para de pular ao trocar de mês. */
+  min-height: 328px;
+}
+
+.cal-semana { margin-bottom: var(--e1); }
+
+/* Abaixo de 480 px os sete círculos de 44 px pedem 308 px, e dentro da gaveta do
+   Registrar sobram 285: a página tira 16, o cartão tira 16 e a gaveta tira 12 de
+   cada lado. A grade sangra os 12 px da gaveta em vez de encolher o círculo,
+   porque alvo de toque não se negocia, e para no fio da gaveta, que continua
+   desenhado em volta do mês. Nunca passa da margem de 16 px da página, então não
+   cria rolagem lateral em nenhuma outra tela que use o calendário. */
+@media (max-width: 479px) {
+  .cal-semana, .cal-dias { margin-left: calc(var(--e3) * -1); margin-right: calc(var(--e3) * -1); }
+}
+
+.cal-semana span {
+  text-align: center;
+  font-size: var(--t-12);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--texto-3);
+}
+
+.cal-celula { display: flex; align-items: center; justify-content: center; min-height: 48px; }
+
+.cal-dia {
+  position: relative;
+  /* Círculo de 44 px, que é o alvo de toque mínimo e a medida da referência.
+     O max-width deixa o círculo encolher em telas abaixo de 360 px em vez de
+     furar a grade. */
+  width: 44px;
+  height: 44px;
+  max-width: 100%;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: none;
+  color: var(--texto-3);
+  font-size: var(--t-14);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transicao), color var(--transicao);
+}
+
+/* Dia com vaga: tinta leve, número no acento e o ponto de 4 px embaixo. */
+.cal-dia[data-estado="vaga"] {
+  background: var(--oliva-suave);
+  color: var(--acao);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cal-dia[data-estado="vaga"]::after {
+  content: "";
+  position: absolute;
+  /* 13 px entre o centro do número e o centro do ponto, na célula de 44 px. */
+  bottom: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--acao);
+}
+
+.cal-dia[data-estado="vaga"]:hover { background: var(--fundo-3); }
+
+/* Dia sem vaga, fechado, passado ou fora da janela: sem círculo, sem ponto. */
+.cal-dia[disabled] { cursor: default; }
+.cal-dia[data-hoje] { box-shadow: inset 0 0 0 1px var(--acao); }
+
+/* O dia escolhido é o ponto mais forte da tela: círculo cheio no verde de ação
+   e número branco em 600. A especificidade passa a do :hover do dia com vaga,
+   que antes clareava o fundo e deixava o número branco sobre nude. */
+.cal-dia.cal-dia[data-escolhido],
+.cal-dia.cal-dia[data-escolhido]:hover {
+  background: var(--acao);
+  color: var(--acao-texto);
+  font-weight: 600;
+}
+.cal-dia.cal-dia[data-escolhido]:focus-visible { outline-offset: 2px; }
+
+.cal-dia[data-escolhido]::after { background: var(--acao-texto); }
+.cal-dia[data-escolhido][data-hoje] { box-shadow: none; }
+
+.cal-legenda { margin-top: var(--e3); font-size: var(--t-13); color: var(--texto-2); line-height: 1.4; }
+
+/* ================================================================== */
+/* 5. Coluna de horários livres e o gesto de confirmar                 */
+/* ================================================================== */
+
+.horarios-cab { margin-bottom: var(--e3); }
+
+.horarios-titulo { font-size: var(--t-20); font-weight: 600; line-height: 1.25; }
+
+.horarios-data {
+  font-size: var(--t-14);
+  color: var(--texto-2);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Celular: botão de 48 px e vão de 12 px. Desktop: 52 px e 20 px, o passo de
+   72 px da referência (DIRECAO-2, seção 7). */
+.horarios-lista { display: flex; flex-direction: column; gap: var(--e3); }
+
+/* Rolagem própria só no desktop, onde a lista divide a tela com o calendário.
+   No celular quem rola é a página: lista com rolagem dentro de tela curta
+   esconde a tarde inteira e a pessoa não descobre que ela existe. */
+.horarios-lista[data-rolagem] { max-height: 520px; overflow-y: auto; padding-right: var(--e1); }
+
+@media (max-width: 719px) {
+  .horarios-lista[data-rolagem] { max-height: none; overflow-y: visible; padding-right: 0; }
+}
+
+@media (min-width: 720px) {
+  .horarios-lista { gap: 20px; }
+  .horarios-lista .horario-livre,
+  .horarios-lista .horario-confirmar,
+  .horarios-lista .horario-fechado { min-height: 52px; }
+}
+
+.horario-item { display: flex; align-items: stretch; gap: 3%; }
+
+.horario-livre {
+  flex: 1 1 auto;
+  min-height: 48px;
+  padding: 0 var(--e3);
+  background: var(--card);
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--r-s);
+  color: var(--acao);
+  font-size: var(--t-16);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--transicao), border-color var(--transicao);
+}
+
+.horario-livre:hover { background: var(--oliva-suave); }
+
+/* Marcado sem o gesto de confirmar (formulário avançado e reagendar): o toque já aplicou a hora. */
+.horario-livre[aria-pressed="true"] {
+  border-width: 2px;
+  border-color: var(--acao);
+  background: var(--oliva-suave);
+}
+
+.horario-item[data-escolhido] .horario-livre { flex: 0 1 48.5%; }
+
+.horario-confirmar {
+  flex: 0 0 48.5%;
+  min-height: 48px;
+  border: 0;
+  border-radius: var(--r-s);
+  background: var(--acao);
+  color: var(--acao-texto);
+  font-size: var(--t-16);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--e2);
+  cursor: pointer;
+  animation: horario-abre 180ms cubic-bezier(0.32, 0.72, 0.28, 1) both;
+}
+
+.horario-confirmar:hover { background: var(--acao-hover); }
+
+@keyframes horario-abre {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Indisponível: mesma caixa, contorno tracejado, motivo em texto do lado. */
+.horario-fechado {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  min-height: 48px;
+  padding: var(--e2) var(--e3);
+  border: 1px dashed var(--borda-forte);
+  border-radius: var(--r-s);
+  background: none;
+}
+
+.horario-fechado-hora {
+  flex: none;
+  min-width: 52px;
+  font-size: var(--t-16);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--texto-3);
+}
+
+.horario-fechado-motivo {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--t-13);
+  line-height: 1.35;
+  color: var(--texto-3);
+}
+
+.horarios-vazio {
+  padding: var(--e4);
+  border: 1px solid var(--borda);
+  border-radius: var(--r-s);
+  background: var(--fundo-2);
+  font-size: var(--t-14);
+  line-height: 1.45;
+  color: var(--texto-2);
+}
+
+.horarios-vazio-titulo { font-weight: 600; color: var(--texto); margin-bottom: var(--e1); }
+.horarios-acoes { display: flex; flex-wrap: wrap; gap: var(--e2); margin-top: var(--e3); }
+
+/* ================================================================== */
+/* 6. Passo do cliente, confirmação e mensagens                        */
+/* ================================================================== */
+
+.agendar-coluna { width: 100%; max-width: 560px; }
+
+.agendar-checklist {
+  margin: 0;
+  padding-left: var(--e4);
+  font-size: var(--t-14);
+  line-height: 1.5;
+  color: var(--texto-2);
+}
+
+.agendar-fim { text-align: left; }
+
+.agendar-fim-marca {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-pill);
+  background: var(--oliva-suave);
+  color: var(--acao);
+  margin-bottom: var(--e3);
+}
+
+.agendar-fim-titulo { font-size: var(--t-28); font-weight: 600; letter-spacing: -0.015em; line-height: 1.15; }
+
+.agendar-resumo {
+  margin-top: var(--e4);
+  border: 1px solid var(--borda);
+  border-radius: var(--r-s);
+  overflow: hidden;
+}
+
+.agendar-resumo-linha {
+  display: flex;
+  gap: var(--e3);
+  padding: var(--e2) var(--e3);
+  font-size: var(--t-14);
+  line-height: 1.4;
+  border-bottom: 1px solid var(--borda);
+}
+
+.agendar-resumo-linha:last-child { border-bottom: 0; }
+
+.agendar-resumo-rotulo { flex: none; width: 96px; color: var(--texto-2); }
+.agendar-resumo-valor { flex: 1 1 auto; min-width: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Ações da confirmação como links de texto, nunca botões concorrentes (3.4). */
+.agendar-links { display: flex; flex-direction: column; align-items: flex-start; gap: var(--e1); margin-top: var(--e4); }
+
+.agendar-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--acao);
+  font-size: var(--t-14);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.agendar-link:hover { color: var(--acao-hover); }
+
+.msg-modelos { display: flex; flex-direction: column; gap: var(--e2); }
+
+.msg-previa {
+  margin-top: var(--e3);
+  padding: var(--e3);
+  background: var(--fundo-2);
+  border-radius: var(--r-s);
+  font-size: var(--t-14);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.msg-nota { margin-top: var(--e2); font-size: var(--t-13); line-height: 1.4; color: var(--texto-2); }
+
+.msg-historico { margin-top: var(--e3); font-size: var(--t-13); color: var(--texto-3); line-height: 1.5; }
+
+/* Bloco "Deste cliente" no detalhe (4.15). */
+.cliente-historico { display: flex; flex-direction: column; }
+
+.cliente-historico-linha {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  width: 100%;
+  min-height: 48px;
+  padding: var(--e2) 0;
+  border: 0;
+  border-bottom: 1px solid var(--borda);
+  background: none;
+  text-align: left;
+  color: var(--texto);
+  cursor: pointer;
+}
+
+.cliente-historico-linha:last-child { border-bottom: 0; }
+.cliente-historico-linha:hover { background: var(--fundo-2); }
+
+.cliente-historico-data {
+  flex: none;
+  width: 92px;
+  font-size: var(--t-13);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--texto-2);
+}
+
+.cliente-historico-texto {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--t-14);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ================================================================== */
+/* 7. Disponibilidade (3.5)                                            */
+/* ================================================================== */
+
+.disp { width: 100%; max-width: 900px; margin: 0 auto; }
+
+.disp-bloco { margin-top: var(--e5); }
+.disp-bloco:first-child { margin-top: 0; }
+
+.disp-bloco-titulo {
+  font-size: var(--t-20);
+  font-weight: 600;
+  line-height: 1.25;
+  margin-bottom: var(--e2);
+}
+
+.disp-bloco-nota { font-size: var(--t-14); line-height: 1.45; color: var(--texto-2); margin-bottom: var(--e3); }
+
+.disp-quadro {
+  background: var(--card);
+  border: 1px solid var(--borda);
+  border-radius: var(--r-m);
+  padding: var(--e2) var(--e4);
+}
+
+.disp-linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--e3);
+  min-height: 60px;
+  padding: var(--e3) 0;
+  border-bottom: 1px solid var(--borda);
+}
+
+.disp-linha:last-child { border-bottom: 0; }
+
+.disp-linha-dia {
+  display: flex;
+  align-items: center;
+  gap: var(--e2);
+  flex: none;
+  width: 100%;
+  font-size: var(--t-14);
+  font-weight: 600;
+}
+
+.disp-linha-dia span::first-letter { text-transform: uppercase; }
+.disp-linha[data-fechado] .disp-linha-dia { color: var(--texto-3); }
+
+.disp-faixas { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--e2); }
+
+.disp-faixa { display: flex; align-items: center; gap: var(--e2); flex-wrap: wrap; }
+
+.disp-faixa .entrada {
+  width: 104px;
+  min-height: 44px;
+  padding: 0 var(--e2);
+  font-variant-numeric: tabular-nums;
+}
+
+.disp-faixa-as { font-size: var(--t-14); color: var(--texto-2); }
+
+.disp-fechado { font-size: var(--t-14); color: var(--texto-3); font-weight: 600; }
+
+.disp-linha-acoes { display: flex; align-items: center; gap: var(--e1); }
+
+.disp-excecao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e3);
+  min-height: 56px;
+  padding: var(--e2) 0;
+  border-bottom: 1px solid var(--borda);
+}
+
+.disp-excecao:last-of-type { border-bottom: 0; }
+
+.disp-excecao-data {
+  flex: none;
+  width: 120px;
+  font-size: var(--t-14);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.disp-excecao-nome { flex: 1 1 160px; min-width: 0; font-size: var(--t-14); color: var(--texto-2); }
+.disp-excecao-faixa { font-size: var(--t-14); color: var(--texto-2); font-variant-numeric: tabular-nums; }
+
+.disp-params { display: grid; grid-template-columns: 1fr; gap: var(--e3); }
+
+.disp-param-ajuda { font-size: var(--t-13); line-height: 1.4; color: var(--texto-2); }
+
+.disp-alvo { display: flex; flex-wrap: wrap; align-items: center; gap: var(--e3); margin-bottom: var(--e4); }
+.disp-alvo .campo { margin: 0; min-width: 240px; }
+
+@media (min-width: 720px) {
+  /* Desktop: a linha do dia tem 60 px e as duas faixas (manhã e tarde) ficam lado a lado,
+     em vez de empilhar e dobrar a altura de cada dia (3.5). */
+  .disp-linha { flex-wrap: nowrap; align-items: center; padding: var(--e2) 0; }
+  .disp-linha-dia { width: 120px; }
+  .disp-faixas { flex-direction: row; flex-wrap: wrap; column-gap: var(--e5); }
+  .disp-faixa { flex-wrap: nowrap; }
+  .disp-params { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ================================================================== */
+/* 8. Movimento reduzido                                               */
+/* ================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .cartao-tipo,
+  .cal-dia,
+  .horario-livre { transition: none; }
+  .horario-confirmar { animation: none; }
+}

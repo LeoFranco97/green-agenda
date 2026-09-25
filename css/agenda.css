@@ -1,0 +1,851 @@
+/* Green Agenda, módulo estilo: css/agenda.css
+   Grade de horas e calendário com as classes da seção 11.5 (bloco "Grade") e
+   as medidas das seções 7.3, 7.4, 7.6, 7.7 e 7.9 da ESPECIFICACAO.md:
+   .grade e .grade-rolagem (contêiner que rola nos dois eixos), .grade-cabs
+   sticky no topo, .grade-gutter sticky à esquerda (44 px), .grade-col com
+   altura por --pph, .grade-linha (só a hora cheia), .grade-fechado,
+   .grade-vao, .grade-agora (2 px dourado), .bloco e todos os seus
+   estados (tentativo, finalizado, cancelado, conflito, liberacao, atrasado,
+   pendente, fantasma, destaque, arrastando, indisp, mais-blocos), .fita-semana,
+   .fita-dia, .mes-grade, .mes-dia e .mes-pontos.
+
+   Redesenho de 18/09/2026 (docs/redesign/DIRECAO.md, lote 6):
+   - a linha da meia hora saiu e a da hora cheia ficou visível, para a grade
+     parar de parecer papel pautado;
+   - .grade-almoco saiu: o almoço é o vão entre duas faixas do dia e usa a
+     mesma hachura de fechado;
+   - o bloco perde a sombra de repouso, a barra do setor cai para 3 px e o
+     status vira texto, não caixa colorida (uma cor por bloco, DIRECAO 2.3);
+   - o conteúdo do bloco passa a depender da largura, não só da altura: em
+     coluna estreita fica só a hora, porque "A cami" e "Aguard" truncados em
+     duas letras são piores que nada;
+   - Mês: número em círculo de 36 px, pontos de setor no lugar das marcas de
+     carro repetidas, e a legenda do rodapé saiu;
+   - nenhuma classe daqui pede --fonte-titulo: a Playfair saiu do app.
+   --pph: 64 px no celular, 72 px no desktop, 56 px em .grade[data-colunas="5"]
+   ou mais, e 56 px em densidade compacta.
+   O JS escreve top, height, left e width nos blocos e a altura das colunas
+   (horas * pph); o CSS cuida do resto. Os atributos que o CSS reconhece nas
+   colunas: [data-fechado] (coluna estreita e esmaecida), [data-hoje]
+   (cabeçalho com o número em oliva) e a classe .grade-col-neutra. */
+
+/* ==================================================================
+   1. Contêiner e rolagem
+   ================================================================== */
+.grade {
+  --pph: 64px;
+  --larg-col: 150px;
+  --topo-vazio: 60px;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 320px;
+  background: var(--card);
+  border-top: 1px solid var(--borda);
+  border-bottom: 1px solid var(--borda);
+}
+.grade[data-colunas="5"], .grade[data-colunas="6"], .grade[data-colunas="7"], .grade[data-colunas="8"],
+.grade[data-colunas="9"], .grade[data-colunas="10"], .grade[data-colunas="11"], .grade[data-colunas="12"],
+.grade[data-colunas="13"], .grade[data-colunas="14"], .grade[data-colunas="15"], .grade[data-colunas="16"],
+.grade[data-colunas-muitas] { --pph: 56px; }
+/* Recursos: cabecalho com avatar, nome, cargo e contagem (cerca de 76 px). */
+.grade[data-modo="recursos"] { --topo-vazio: 92px; }
+
+.grade-rolagem {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(100%, max-content);
+  grid-auto-rows: max-content;
+  scroll-padding-top: 56px;
+}
+
+/* Cabeçalhos das colunas, presos no topo */
+.grade-cabs {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  display: flex;
+  align-items: stretch;
+  min-height: 48px;
+  background: var(--card);
+  border-bottom: 1px solid var(--borda);
+}
+.grade-cab-canto {
+  position: sticky;
+  left: 0;
+  z-index: 7;
+  flex: none;
+  width: var(--gutter);
+  background: var(--card);
+  border-right: 1px solid var(--borda);
+}
+.grade-cab-col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1px;
+  padding: 6px 8px;
+  border-left: 1px solid var(--borda);
+  text-align: left;
+  color: var(--texto);
+  overflow: hidden;
+  min-height: 48px;
+}
+.grade-cab-col:first-of-type { border-left: 0; }
+.grade-cab-titulo, .grade-cab-col > b, .grade-cab-col > strong {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  font-size: var(--t-14);
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.grade-cab-sub, .grade-cab-col > span, .grade-cab-col > small {
+  display: block;
+  max-width: 100%;
+  font-size: var(--t-13);
+  color: var(--texto-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* O seletor genérico ".grade-cab-col > span" acima ganhava do .grade-cab-titulo e
+   o título virava bloco: a inicial do carro colava no nome ("FFiorino"). */
+.grade-cab-col > .grade-cab-titulo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--t-14);
+  color: inherit;
+}
+.grade-cab-qtd { font-size: var(--t-13); color: var(--texto-2); font-variant-numeric: tabular-nums; }
+.grade-cab-num {
+  font-weight: 600;
+  font-size: var(--t-20);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.grade-cab-col[data-hoje] .grade-cab-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 6px;
+  border-radius: var(--r-pill);
+  background: var(--acao);
+  color: var(--texto-inverso);
+}
+.grade-cab-col .inicial { width: 24px; height: 24px; }
+.grade-cab-col .avatar-pq { width: 26px; height: 26px; font-size: var(--t-13); }
+.grade-cab-col .chip { height: 22px; padding: 0 6px; }
+.grade-cab-col .ponto-turno { width: 7px; height: 7px; }
+.grade-cab-col[data-fechado] { color: var(--texto-2); }
+button.grade-cab-col:hover { background: var(--fundo-2); cursor: pointer; }
+/* Coluna neutra ("Sem carro", "Avulsos") não é um recurso: pesa menos que as
+   colunas reais, sem círculo de cor e com o nome em --texto-2 (DIRECAO 3.3). */
+.grade-cab-neutra, .grade-cab-col[data-neutra] { background: var(--fundo-2); }
+.grade-cab-col[data-neutra] .grade-cab-titulo { color: var(--texto-2); font-weight: 600; }
+.grade-cab-col[data-neutra] .inicial, .grade-cab-col[data-neutra] .avatar-pq { display: none; }
+
+/* Corpo: gutter à esquerda e colunas */
+.grade-corpo { display: flex; align-items: stretch; position: relative; }
+.grade-gutter {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  flex: none;
+  width: var(--gutter);
+  background: var(--card);
+  border-right: 1px solid var(--borda);
+}
+.grade-hora {
+  position: absolute;
+  right: 6px;
+  transform: translateY(-50%);
+  font-size: var(--t-13);
+  line-height: 1;
+  color: var(--texto-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  background: var(--card);
+  padding: 1px 0 1px 2px;
+}
+.grade-hora[data-cheia], .grade-hora-cheia { font-weight: 600; color: var(--texto); }
+.grade-hora:first-child { transform: translateY(0); }
+.grade-hora[data-sob-agora] { visibility: hidden; }
+.grade-colunas { display: flex; align-items: stretch; flex: 1 1 0; min-width: 0; position: relative; }
+.grade-col {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  border-left: 1px solid var(--borda);
+  background: var(--card);
+  cursor: pointer;
+  /* clip recorta como hidden mas nao vira contexto de rolagem, entao o .grade-vazio
+     sticky acompanha a rolagem da .grade-rolagem; onde clip nao existe fica hidden. */
+  overflow: hidden;
+  overflow: clip;
+}
+.grade-col:first-child { border-left: 0; }
+.grade-col-neutra { background: var(--fundo-2); }
+.grade-col[data-fechado] { background: var(--fundo-2); }
+.grade[data-arrastavel] .grade-col, .grade-col[data-arrastavel] { cursor: default; }
+
+/* Linhas, faixas fechadas, agora.
+   Só a hora cheia tem linha (DIRECAO 3.3). A meia hora virou respiro: com as
+   duas no mesmo cinza a grade virava papel pautado uniforme.
+   Opacidade: a direção pedia 25 % de --borda-forte, mas 25 % sobre o cartão dá
+   1,25:1, mais claro que a --borda de hoje (1,41:1), ou seja, pioraria o que o
+   item quer resolver. 40 % dá cerca de 1,6:1, um degrau acima da --borda, que é
+   a leitura correta da intenção. */
+.grade-linha {
+  position: absolute;
+  left: 0; right: 0;
+  height: 0;
+  border-top: 1px solid var(--borda-forte);
+  opacity: 0.4;
+  pointer-events: none;
+}
+.grade-fechado {
+  position: absolute;
+  left: 0; right: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.grade-fechado {
+  background: repeating-linear-gradient(135deg, var(--hachura) 0 1px, transparent 1px 8px), var(--fundo-2);
+}
+.grade-fechado-texto, .grade-fechado[data-texto]::after {
+  content: attr(data-texto);
+  position: absolute;
+  top: 6px; left: 8px;
+  font-size: var(--t-13);
+  color: var(--texto-2);
+  font-weight: 600;
+}
+/* Vão vazio colapsado (DIRECAO 3.3): cobre a pauta em branco com o que existe
+   ali, e oferece o agendamento naquele horário. Fica abaixo dos blocos e acima
+   das linhas de hora. */
+.grade-vao {
+  position: absolute;
+  left: 0; right: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: var(--e2);
+  padding: var(--e3) var(--e4);
+  background: var(--card);
+  text-align: left;
+  font-size: var(--t-14);
+  line-height: 1.3;
+  color: var(--texto-2);
+  overflow: hidden;
+  /* A faixa não intercepta o toque: quem toca no meio dela continua agendando
+     na hora tocada, pelo gesto que já existe na coluna. Só o botão recebe. */
+  pointer-events: none;
+}
+.grade-vao .grade-vao-acao { pointer-events: auto; }
+
+.grade-agora {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: var(--dourado);
+  z-index: 4;
+  pointer-events: none;
+}
+.grade-agora::before {
+  content: "";
+  position: absolute;
+  left: 0; top: -3px;
+  width: 8px; height: 8px;
+  border-radius: var(--r-pill);
+  background: var(--dourado);
+}
+.grade-agora-ponto {
+  position: absolute;
+  left: 4px;
+  transform: translateY(-50%);
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--t-13);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--texto);
+  font-variant-numeric: tabular-nums;
+  background: var(--card);
+  padding: 1px 2px;
+  pointer-events: none;
+}
+.grade-agora-ponto::before {
+  content: "";
+  width: 8px; height: 8px;
+  border-radius: var(--r-pill);
+  background: var(--dourado);
+  flex: none;
+}
+/* Texto de coluna vazia: unico filho em fluxo da coluna, preso logo abaixo dos cabecalhos
+   sticky (--topo-vazio cobre a altura do cabecalho por modo) para continuar visivel com a
+   grade rolada para a tarde. */
+.grade-vazio {
+  position: sticky;
+  top: var(--topo-vazio, 60px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  padding: var(--e4);
+  text-align: center;
+  font-size: var(--t-14);
+  color: var(--texto-2);
+  pointer-events: none;
+  z-index: 1;
+}
+.grade-vazio span {
+  max-width: 180px;
+  padding: 4px 10px;
+  background: var(--card);
+  border-radius: var(--r-s);
+}
+.grade-col:has(.bloco) .grade-vazio, .grade-col:has(.bloco-indisp) .grade-vazio, .grade-col:has(.mais-blocos) .grade-vazio { display: none; }
+/* Coluna neutra vazia não precisa dizer "Todos com carro" no meio do nada: o
+   cabeçalho dela já diz "Sem carro, sem serviços" (auditoria 4). */
+.grade-col-neutra .grade-vazio { display: none; }
+.grade[data-fechado] .grade-col, .grade-col[data-dia-fechado] { opacity: 0.85; }
+.grade-fechado-aviso {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  font-size: var(--t-13);
+  font-weight: 600;
+  color: var(--texto-2);
+  padding: 4px 8px;
+}
+
+/* ==================================================================
+   2. Larguras das colunas por faixa (7.3)
+   ================================================================== */
+/* Celular: uma coluna ocupa tudo; mais de uma, 150 px fixos com rolagem lateral */
+.grade-colunas > .grade-col:not(:only-child),
+.grade-cabs > .grade-cab-col {
+  flex: 0 0 var(--larg-col);
+  width: var(--larg-col);
+}
+.grade-colunas > .grade-col:only-child,
+.grade-cab-canto + .grade-cab-col:last-child,
+.grade[data-colunas="1"] .grade-cab-col { flex: 1 1 auto; width: auto; }
+
+@media (min-width: 720px) {
+  .grade-colunas > .grade-col:not(:only-child),
+  .grade-cabs > .grade-cab-col {
+    flex: 1 1 0;
+    width: auto;
+    min-width: var(--larg-col);
+  }
+}
+@media (min-width: 1024px) {
+  .grade { --pph: 72px; --larg-col: 180px; }
+  .grade[data-colunas="5"], .grade[data-colunas="6"], .grade[data-colunas="7"], .grade[data-colunas="8"],
+  .grade[data-colunas="9"], .grade[data-colunas="10"], .grade[data-colunas="11"], .grade[data-colunas="12"],
+  .grade[data-colunas="13"], .grade[data-colunas="14"], .grade[data-colunas="15"], .grade[data-colunas="16"],
+  .grade[data-colunas-muitas] { --pph: 56px; }
+  :root[data-densidade="compacta"] .grade { --pph: 56px; }
+  /* Semana: 7 colunas iguais, domingo fechado com 60 % */
+  .grade[data-colunas="7"] .grade-col, .grade[data-colunas="7"] .grade-cab-col, .grade[data-modo="semana"] .grade-col, .grade[data-modo="semana"] .grade-cab-col { min-width: 120px; }
+  /* Mesma especificidade nas duas camadas (cabeçalho e coluna), senão o cabeçalho encolhe
+     e a coluna não, e os dias ficam desalinhados. Só na semana: nos outros modos a coluna
+     pode receber data-fechado sem o cabeçalho receber, e as larguras precisam bater. */
+  /* Com flex-basis 0 e border-box, a base de cada item vira borda + padding. O cabeçalho tem
+     8 px de padding lateral e a coluna não tinha, e a sobra distribuída em 1 : 0.6 ficava
+     diferente nas duas camadas (5 px de desvio no domingo). O padding aqui iguala as bases;
+     todo o conteúdo da coluna é absoluto e se posiciona pela caixa de padding, então nada muda. */
+  .grade[data-modo="semana"] .grade-colunas > .grade-col { padding-inline: 8px; }
+  .grade[data-modo="semana"] .grade-colunas > .grade-col[data-fechado]:not(:only-child),
+  .grade[data-modo="semana"] .grade-cabs > .grade-cab-col[data-fechado] { flex: 0.6 1 0; min-width: 72px; }
+}
+
+/* ==================================================================
+   3. Bloco de serviço (7.4)
+   ================================================================== */
+.bloco {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(48px, 1fr) minmax(0, max-content);
+  /* Linhas em max-content, nao auto: as linhas truncadas (overflow hidden) tem minimo zero e,
+     quando o bloco e mais baixo que o conteudo, auto espremia todas e o chip de status
+     era desenhado por cima da hora e do tipo. Com max-content cada linha guarda a altura
+     e a sobra e recortada embaixo. */
+  grid-template-rows: repeat(4, max-content);
+  grid-auto-rows: max-content;
+  align-content: start;
+  align-items: start;
+  column-gap: 4px;
+  min-height: 28px;
+  padding: 3px 6px 3px 7px;
+  background: var(--card);
+  border: 1px solid var(--borda);
+  /* Uma cor por bloco (DIRECAO 2.3): a do setor, em barra de 3 px à esquerda. */
+  border-left: 3px solid var(--cor-setor, var(--borda-forte));
+  border-radius: 4px;
+  text-align: left;
+  color: var(--texto);
+  overflow: hidden;
+  cursor: pointer;
+  container-type: size;
+  transition: box-shadow var(--transicao), transform var(--transicao);
+}
+.bloco:hover { box-shadow: var(--sombra-2); z-index: 3; }
+.bloco:focus-visible { z-index: 3; outline-offset: 0; }
+.bloco-linha1 {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: var(--t-14);
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bloco-cliente { grid-column: 1 / -1; grid-row: 2; }
+.bloco-meta { grid-column: 1 / -1; grid-row: 3; }
+.bloco-resp { grid-column: 1 / -1; grid-row: 4; }
+.bloco-linha1 .bloco-hora { font-variant-numeric: tabular-nums; flex: none; }
+.bloco-linha1 .bloco-tipo { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.bloco-cliente, .bloco-meta, .bloco-resp {
+  display: none;
+  font-size: var(--t-13);
+  line-height: 1.25;
+  color: var(--texto-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bloco-cliente { color: var(--texto); }
+.bloco-meta { align-items: center; gap: 4px; margin-top: 1px; }
+.bloco-meta .chip-carro { height: 18px; padding: 0 5px 0 2px; gap: 3px; border-color: transparent; background: var(--fundo-2); }
+.bloco-meta .chip-carro .inicial { width: 16px; height: 16px; font-size: var(--t-13); }
+/* Status do bloco: texto, não caixa colorida (DIRECAO 2.3 e 2.4). A borda da
+   esquerda já carrega o setor; quatro codificações de cor no mesmo bloco era o
+   defeito da visão Semana. O atraso continua em vermelho, porque é exceção
+   real, mas como texto. */
+.bloco-status {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  display: none;
+  align-items: center;
+  height: 18px;
+  min-width: 0;
+  color: var(--cor-status, var(--texto-2));
+  font-size: var(--t-13);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* O dourado de "Em andamento" não se lê como texto (1,8:1); o bloco inteiro já
+   está pintado de --st-em-andamento-suave, então o texto vai em --alerta. */
+.bloco-status.status-em-andamento { color: var(--alerta); }
+.bloco-status.status-atrasado { color: var(--erro); }
+/* Conteúdo progressivo pela altura do bloco (7.4: cliente e status a partir de 44 px,
+   meta a partir de 60, responsáveis a partir de 84). A container query mede a caixa de
+   conteúdo, 8 px menor que a altura do bloco (borda 1 + 1, padding 3 + 3), por isso os
+   limiares aqui são 36, 52 e 76. */
+@container (min-height: 36px) {
+  .bloco-cliente { display: block; }
+  .bloco-status { display: inline-flex; }
+}
+@container (min-height: 52px) {
+  .bloco-meta { display: flex; }
+}
+@container (min-height: 76px) {
+  .bloco-resp { display: block; }
+}
+/* Bloco estreito (caixa de conteúdo até 239 px, bloco até 257 px, o que inclui as colunas
+   de 180 px do eixo Pessoas): o chip de status desce para a segunda linha em vez de
+   espremer ou cobrir a hora e o tipo; as demais linhas descem um degrau (60, 84 e 108 px
+   de bloco). Acima disso (Veículos, Dia) fica na linha 1 e encolhe com reticências antes
+   de invadir o título. */
+@container (max-width: 239px) {
+  .bloco-status { grid-column: 1 / -1; grid-row: 2; justify-self: start; max-width: 100%; }
+  .bloco-cliente { grid-row: 3; display: none; }
+  .bloco-meta { grid-row: 4; display: none; }
+  .bloco-resp { grid-row: 5; display: none; }
+}
+@container (max-width: 239px) and (min-height: 52px) {
+  .bloco-cliente { display: block; }
+}
+@container (max-width: 239px) and (min-height: 76px) {
+  .bloco-meta { display: flex; }
+}
+@container (max-width: 239px) and (min-height: 100px) {
+  .bloco-resp { display: block; }
+}
+/* Conteúdo por LARGURA, não só por altura (auditoria 4). As medidas abaixo são
+   da caixa de conteúdo, que é o que a container query mede: um bloco de 74 px
+   na semana (duas lanes numa coluna de 157 px) tem 57 px de conteúdo.
+   Até 44 px só a hora cabe. De 45 a 95 px a hora ganha uma linha só para ela e
+   o tipo desce, com a largura inteira e duas linhas: "A cami", "Aguard" e
+   "Robert." truncados em duas letras são piores que nada. O resto continua no
+   title e no aria-label do bloco. */
+@container (max-width: 44px) {
+  .bloco-tipo, .bloco-status, .bloco-cliente, .bloco-meta, .bloco-resp { display: none; }
+  .bloco-linha1 { grid-column: 1 / -1; }
+}
+@container (min-width: 45px) and (max-width: 95px) {
+  .bloco-linha1 { grid-column: 1 / -1; flex-direction: column; align-items: flex-start; gap: 0; }
+  .bloco-linha1 .bloco-tipo {
+    max-width: 100%;
+    font-size: var(--t-13);
+    line-height: 1.2;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .bloco-status, .bloco-cliente, .bloco-meta, .bloco-resp { display: none; }
+}
+@container (min-width: 45px) and (max-width: 95px) and (max-height: 35px) {
+  .bloco-linha1 .bloco-tipo { display: none; }
+}
+@container (min-width: 45px) and (max-width: 95px) and (min-height: 76px) {
+  .bloco-cliente { display: block; grid-row: 2; }
+}
+/* Sem suporte a container queries, o JS marca a altura em data-alt. So vale onde a
+   container query nao existe: com especificidade maior, estas regras passavam por cima
+   da versao estreita e forcavam a linha de bairro e carro em bloco de 60 a 83 px, que nao
+   cabia. */
+@supports not (container-type: size) {
+  .bloco[data-alt="2"] .bloco-cliente, .bloco[data-alt="3"] .bloco-cliente, .bloco[data-alt="4"] .bloco-cliente { display: block; }
+  .bloco[data-alt="2"] .bloco-status, .bloco[data-alt="3"] .bloco-status, .bloco[data-alt="4"] .bloco-status { display: inline-flex; }
+  .bloco[data-alt="3"] .bloco-meta, .bloco[data-alt="4"] .bloco-meta { display: flex; }
+  .bloco[data-alt="4"] .bloco-resp { display: block; }
+}
+
+/* Estados do bloco */
+.bloco-tentativo { border-left-style: dashed; }
+.bloco.status-em-andamento { background: var(--st-em-andamento-suave); border-left-color: var(--dourado); }
+.bloco-finalizado { opacity: 0.55; box-shadow: none; }
+.bloco-finalizado.status-nao-realizado .bloco-linha1, .bloco.status-nao-realizado .bloco-linha1 { text-decoration: line-through; }
+.bloco-cancelado { opacity: 0.45; box-shadow: none; }
+.bloco-cancelado .bloco-linha1, .bloco-cancelado .bloco-cliente { text-decoration: line-through; }
+.bloco-conflito, .bloco-liberacao { box-shadow: 0 0 0 1px var(--erro); }
+.bloco-conflito .bloco-linha1, .bloco-liberacao .bloco-linha1 { padding-left: 20px; }
+/* Bloco estreito com hora e tipo empilhados: o recuo do alerta vale só para a
+   hora. No tipo ele tirava 20 de 65 px e "Entrega" virava "Entre...". */
+@container (min-width: 45px) and (max-width: 95px) {
+  .bloco-conflito .bloco-linha1, .bloco-liberacao .bloco-linha1 { padding-left: 0; }
+  .bloco-conflito .bloco-hora, .bloco-liberacao .bloco-hora { padding-left: 20px; }
+}
+/* Bloco médio (coluna inteira da semana, 96 a 239 px) com altura para isso: o
+   tipo quebra em duas linhas em vez de cortar em "Instalação de...". 35 de
+   título, 18 de status e 16 de cliente cabem a partir de 70 px de conteúdo. */
+@container (min-width: 96px) and (max-width: 239px) and (min-height: 70px) {
+  .bloco-linha1 { white-space: normal; align-items: flex-start; }
+  .bloco-linha1 .bloco-tipo {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow-wrap: anywhere;
+  }
+}
+.bloco-alerta {
+  /* Irmão do .bloco na .grade-col (button dentro de button é inválido); top e left vêm inline, iguais aos do bloco. */
+  position: absolute;
+  top: 0; left: 0;
+  z-index: 4;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px; height: 20px;
+  border-radius: 0 0 4px 0;
+  background: var(--erro-suave);
+  color: var(--erro);
+  cursor: pointer;
+}
+.bloco-alerta .icone { width: 14px; height: 14px; }
+.bloco-alerta:hover { background: var(--erro); color: var(--texto-inverso); }
+.bloco-alerta:focus-visible { outline-offset: 0; border-radius: 0 0 4px 0; }
+.bloco-atrasado .bloco-status { color: var(--erro); }
+.bloco-pendente .ponto-sync, .bloco .ponto-sync { position: absolute; right: 4px; bottom: 4px; }
+.bloco-invalido { outline: 1px dashed var(--erro); outline-offset: -2px; }
+.bloco-arrastando { z-index: 9; box-shadow: var(--sombra-2); opacity: 0.92; cursor: grabbing; transition: none; }
+.bloco-destaque { animation: destaqueBloco 1.5s ease-out 1; }
+@keyframes destaqueBloco {
+  0% { box-shadow: 0 0 0 3px var(--dourado), var(--sombra-2); }
+  70% { box-shadow: 0 0 0 3px var(--dourado), var(--sombra-2); }
+  100% { box-shadow: var(--sombra-1); }
+}
+
+/* Fantasma no toque em vão */
+.bloco-fantasma {
+  position: absolute;
+  left: 2px; right: 2px;
+  z-index: 3;
+  background: var(--dourado);
+  opacity: 0.35;
+  border-radius: 4px;
+  pointer-events: none;
+  animation: fantasma 150ms ease-out;
+}
+@keyframes fantasma { from { opacity: 0; } }
+
+/* Indisponibilidade, folga, fora do turno: hachura nude, não clicável */
+.bloco-indisp {
+  position: absolute;
+  left: 0; right: 0;
+  z-index: 1;
+  padding: 4px 6px;
+  background: repeating-linear-gradient(135deg, var(--nude) 0 2px, var(--hachura) 2px 8px);
+  color: var(--texto);
+  font-size: var(--t-13);
+  font-weight: 600;
+  line-height: 1.25;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  cursor: default;
+}
+.bloco-indisp span { background: var(--card); padding: 1px 4px; border-radius: 3px; }
+
+/* "+N" no celular (6.13) */
+.mais-blocos {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  border: 1px dashed var(--borda-forte);
+  border-radius: 4px;
+  background: var(--fundo-2);
+  color: var(--texto);
+  font-size: var(--t-14);
+  font-weight: 600;
+  cursor: pointer;
+}
+.mais-blocos:hover { background: var(--fundo-3); }
+
+/* ==================================================================
+   4. Fita da semana (celular, 7.6)
+   ================================================================== */
+.fita-semana {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--e1);
+  margin: var(--e2) 0 var(--e4);
+}
+.fita-dia {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  padding: 6px 2px 6px;
+  border-radius: var(--r-s);
+  border: 1px solid transparent;
+  color: var(--texto);
+  transition: background var(--transicao), border-color var(--transicao);
+}
+.fita-dia:hover { background: var(--fundo-2); }
+.fita-dia[data-fechado] { color: var(--texto-2); }
+.fita-dia-abrev, .fita-dia > span:first-child { font-size: var(--t-13); color: var(--texto-2); text-transform: lowercase; }
+.fita-dia-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  border-radius: var(--r-pill);
+  font-weight: 600;
+  font-size: var(--t-16);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  border: 2px solid transparent;
+  color: var(--texto);
+}
+.fita-dia[data-hoje] .fita-dia-num { background: var(--acao); color: var(--texto-inverso); }
+.fita-dia[data-ativo] .fita-dia-num, .fita-dia[aria-pressed="true"] .fita-dia-num, .fita-dia[aria-selected="true"] .fita-dia-num { border-color: var(--dourado); }
+.fita-dia-qtd { font-size: var(--t-13); font-weight: 600; color: var(--texto-2); min-height: 16px; font-variant-numeric: tabular-nums; }
+.fita-dia-qtd:empty { visibility: hidden; }
+
+/* As marcas de carro (.marcas-carro e .marca-carro) saíram da fita e do Mês no
+   lote 6, e com elas estas regras: ver o comentário em src/agenda.js, acima de
+   textoMarcasCarro. */
+
+/* Lista da semana no celular: períodos */
+.periodo-cab { margin-top: var(--e4); }
+.periodo-cab:first-child { margin-top: 0; }
+
+/* ==================================================================
+   5. Mês (7.7)
+   ================================================================== */
+.mes-grade {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+  margin-bottom: var(--e3);
+}
+.mes-cab {
+  font-size: var(--t-13);
+  font-weight: 600;
+  color: var(--texto-2);
+  text-transform: lowercase;
+  text-align: left;
+  padding: 4px 6px;
+}
+.mes-dia {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 68px;
+  padding: 6px 4px 8px;
+  border: 1px solid var(--borda);
+  border-radius: var(--r-s);
+  background: var(--card);
+  color: var(--texto);
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  transition: background var(--transicao), border-color var(--transicao);
+}
+.mes-dia:hover { border-color: var(--borda-forte); background: var(--fundo-2); }
+.mes-dia[data-fechado] { background: var(--fundo-2); }
+.mes-dia[data-ativo], .mes-dia[aria-pressed="true"] { border-color: var(--acao); }
+.mes-fora { opacity: 0.35; pointer-events: none; }
+/* Celular: número centrado e os pontos embaixo. A contagem em algarismo sai,
+   porque os pontos já contam e a célula tem 46 px de largura em 375 px. */
+.mes-dia-linha { display: flex; align-items: center; justify-content: center; width: 100%; gap: 2px; }
+.mes-dia-qtd { display: none; }
+/* Célula do dia (DIRECAO 3.3): círculo de 36 px, número em 14 px tabular.
+   Hoje é contorno em --acao, dia escolhido é preenchimento sólido: dois
+   estados diferentes precisam de duas formas, não da mesma. */
+.mes-dia-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  border: 2px solid transparent;
+  border-radius: var(--r-pill);
+  font-weight: 600;
+  font-size: var(--t-14);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.mes-dia[data-hoje] .mes-dia-num { border-color: var(--acao); color: var(--acao); }
+.mes-dia[data-ativo] .mes-dia-num, .mes-dia[aria-pressed="true"] .mes-dia-num { background: var(--acao); border-color: var(--acao); color: var(--texto-inverso); }
+.mes-dia-qtd { font-size: var(--t-13); font-weight: 600; color: var(--texto-2); font-variant-numeric: tabular-nums; }
+/* Pontos de setor: um por serviço, até três, depois "+N" (DIRECAO 3.3). Saíram
+   as 105 marcas de carro repetidas numa tela com 8 serviços, e a legenda com
+   elas. No desktop a célula já lista os serviços com a cor na borda, então os
+   pontos só existem no celular. */
+.mes-pontos { display: flex; align-items: center; gap: 3px; min-height: 8px; margin-top: auto; }
+.mes-ponto {
+  width: 6px; height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--cor-setor, var(--texto-3));
+  flex: none;
+}
+.mes-ponto-mais { font-size: var(--t-13); font-weight: 600; color: var(--texto-2); line-height: 1; font-variant-numeric: tabular-nums; }
+.mes-dia-conflito {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 6px; height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--erro);
+}
+.mes-dia-lista { display: none; font-variant-numeric: tabular-nums; }
+
+/* ==================================================================
+   6. Envoltórios das visões
+   ================================================================== */
+/* Uma visão que contém a grade (.visao-grade, .visao-dia ou .visao-recursos)
+   faz o #conteudo virar coluna flex: a grade ocupa o resto da altura e rola
+   por dentro de .grade-rolagem, nunca a página (7.3). Funciona com a visão
+   como filha direta de #conteudo ou dentro de um envoltório. Fora desse
+   contexto (ficha do veículo), a grade usa a altura de .grade-fixa. */
+#conteudo:has(.visao-grade), #conteudo:has(.visao-dia), #conteudo:has(.visao-recursos) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+#conteudo:has(.visao-grade) > *, #conteudo:has(.visao-dia) > *, #conteudo:has(.visao-recursos) > * { flex: none; }
+/* O espaço reservado para o FAB (base.css: 152 px no celular) é para lista que
+   rola; numa visão de grade ele comia 152 px dos 644 px úteis, ou seja, duas
+   horas e meia de dia. A grade rola por dentro, então o FAB pode flutuar sobre
+   o canto dela. Precisa desta especificidade para vencer a regra do base.css. */
+#app:has(#camada-fab:not(:empty)) #conteudo:has(.visao-grade),
+#app:has(#camada-fab:not(:empty)) #conteudo:has(.visao-dia),
+#app:has(#camada-fab:not(:empty)) #conteudo:has(.visao-recursos) { padding-bottom: 0; }
+#conteudo > :has(.visao-grade), #conteudo > :has(.visao-dia), #conteudo > :has(.visao-recursos),
+#conteudo > .visao-grade, #conteudo > .visao-dia, #conteudo > .visao-recursos {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.visao-grade, .visao-dia, .visao-recursos { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.visao-grade > *, .visao-dia > *, .visao-recursos > * { flex: none; }
+.visao-grade > .grade, .visao-dia > .grade, .visao-recursos > .grade,
+.visao-grade > .visao-dia-desktop, .visao-dia > .visao-dia-desktop { flex: 1; min-height: 0; }
+.visao-grade > .linha-chips, .visao-recursos > .linha-chips { padding-left: var(--e4); padding-right: var(--e4); }
+.visao-dia-desktop { display: flex; gap: var(--e5); align-items: stretch; min-height: 0; }
+.visao-dia-desktop > .grade { flex: 1; min-width: 0; height: auto; }
+.visao-dia-desktop > .painel-ocupacao { overflow-y: auto; }
+.grade-fixa { height: 520px; }
+.chip-salto { scroll-snap-align: start; }
+
+@media (min-width: 1024px) {
+  .mes-grade { gap: var(--e1); }
+  /* Desktop: a célula lista os serviços, então volta a ser alinhada à esquerda,
+     a contagem aparece ao lado do número e os pontos saem (seriam repetição da
+     cor que já está na borda de cada item da lista). */
+  .mes-dia { min-height: 108px; padding: 6px 8px 8px; align-items: flex-start; gap: 2px; }
+  .mes-dia-linha { justify-content: space-between; }
+  .mes-dia-qtd { display: block; }
+  .mes-dia-qtd:empty { display: none; }
+  .mes-pontos { display: none; }
+  .mes-dia-lista { display: flex; flex-direction: column; gap: 1px; width: 100%; margin-top: 2px; }
+  .mes-dia-lista > * {
+    font-size: var(--t-13);
+    line-height: 1.3;
+    color: var(--texto);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-left: 6px;
+    border-left: 2px solid var(--cor-setor, var(--borda-forte));
+  }
+  .mes-dia-lista .mes-dia-mais { color: var(--texto-2); border-left-color: transparent; font-weight: 600; }
+  .mes-cab { padding: 6px 8px; }
+  .fita-semana { display: none; }
+}

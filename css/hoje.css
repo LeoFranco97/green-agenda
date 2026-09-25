@@ -1,0 +1,554 @@
+/* Green Agenda, módulo estilo: css/hoje.css
+   A tela "Hoje", o grupo virado app (docs/redesign/DIRECAO-2.md, seção 4):
+   cabeçalho de 56 px com a linha de resumo e o segmento "Por hora" e "Por
+   pessoa", o feed com cabeçalhos grudentos, o cartão do registro (88 px no
+   celular, 72 px no desktop) com avatar, período, o que faz, cliente, local e
+   carro, o chip de status enxuto com o botão de próximo passo, a faixa de
+   ausências da gerência e o estado vazio único (4.7).
+
+   Dono: lote 3 (src/agenda.js e este arquivo). O lote 1 só cria o arquivo e
+   o liga no index.html e no pré-cache do sw.js; ele nasce sem nenhuma regra.
+
+   Regras de convivência (DIRECAO-2, seção 0):
+   - prefixos de classe reservados: feed- e hoje-;
+   - nenhum hexadecimal aqui: cor só por token de css/tokens.css, com os
+     tokens --st-* dos estados e o dourado em dose pequena (faixa de
+     ausências);
+   - Inter em tudo, com tabular-nums em hora, data e número;
+   - alvo de toque de 44 px em tudo que se toca, contando a margem;
+   - coluna de conteúdo travada em 760 px no desktop, uma coluna com recuo
+     de 16 px no celular. */
+
+/* ================================================================== */
+/* A coluna do feed                                                    */
+/* ================================================================== */
+
+/* .feed nasce com .col-760 no HTML: a coluna de conteúdo trava em 760 px no
+   desktop (4.7) pela regra que já existe em css/base.css, e no celular ocupa a
+   largura toda dentro do recuo de 16 px de #conteudo.
+
+   Desvio consciente da 4.2: a data por extenso não vai ao lado do título, vai
+   na primeira posição da linha de resumo, que é onde ela já mora no resto do
+   aplicativo (.dia-resumo). Em 375 px o cabeçalho de 56 px não tem espaço para
+   título, data, um botão com rótulo e o sino sem esmagar alguma coisa, e
+   repetir a data em dois lugares seria pior que movê-la uma linha para baixo. */
+.feed {
+  padding-top: var(--e3);
+}
+
+/* A linha de resumo é a de sempre (.dia-resumo, css/listas.css), que já começa
+   pela data por extenso e só dá peso e cor ao que é maior que zero (3.7). Aqui
+   entra só o tom que faltava, o do não realizado. */
+.feed .dia-resumo {
+  margin: 0 0 var(--e2);
+}
+.feed .dia-resumo strong[data-tom="erro"] {
+  color: var(--erro);
+}
+
+/* ---- Segmento "Por hora" e "Por pessoa" (4.2) ---- */
+
+/* 32 px de altura, com 6 px de margem em cima e embaixo: o alvo de toque fecha
+   os 44 px contando a margem, sem inchar a faixa. */
+.feed-segmento {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 32px;
+  margin: 6px 0 var(--e4);
+  padding: 2px;
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--r-pill);
+  background: var(--card);
+}
+.feed-segmento-opcao {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--texto-2);
+  font: inherit;
+  font-size: var(--t-13);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.feed-segmento-opcao:hover {
+  color: var(--texto);
+}
+/* O desenho tem 26 px, o alvo de toque tem 44 (regra dura da DIRECAO-2): a área invisível cresce, o segmento não.
+   Conferido na verificação de 22/09/2026 em 375 px. */
+.feed-segmento-opcao {
+  position: relative;
+}
+.feed-segmento-opcao::after {
+  content: "";
+  position: absolute;
+  inset: -9px 0;
+}
+.feed-segmento-opcao[aria-pressed="true"] {
+  background: var(--oliva-suave);
+  color: var(--acao);
+}
+
+/* ---- As duas faixas da gerência (4.5) ---- */
+
+.feed-faixa {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--e2) var(--e3);
+  margin-bottom: var(--e3);
+  padding: var(--e3) var(--e4);
+  border-radius: var(--r-m);
+}
+.feed-faixa-ausencias {
+  background: var(--dourado-suave);
+  border-left: 3px solid var(--dourado);
+}
+.feed-faixa-conflito {
+  background: var(--erro-suave);
+  border-left: 3px solid var(--erro);
+}
+.feed-faixa-texto {
+  flex: 1 1 240px;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--e2);
+  margin: 0;
+  font-size: var(--t-14);
+  line-height: 1.45;
+  color: var(--texto);
+}
+.feed-faixa-texto strong {
+  font-weight: 600;
+}
+.feed-faixa-texto .icone {
+  flex: none;
+  margin-top: 2px;
+  color: var(--erro);
+}
+/* Tudo que se toca tem 44 px, inclusive o botão pequeno dentro da faixa. */
+.feed-faixa .btn,
+.feed-faixa-link {
+  min-height: 44px;
+}
+.feed-faixa-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e1);
+  color: var(--acao);
+  font-size: var(--t-14);
+  font-weight: 600;
+  text-decoration: none;
+}
+.feed-faixa-link:hover {
+  text-decoration: underline;
+}
+
+/* ---- Grupos do feed (4.3) ---- */
+
+.feed-grupo {
+  margin-bottom: var(--e5);
+}
+.feed-grupo-cab {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--e2);
+  margin: 28px 0 var(--e2);
+  padding: var(--e2) 0;
+  background: var(--fundo);
+  font-size: var(--t-14);
+  font-weight: 600;
+  color: var(--texto);
+}
+.feed-grupo:first-child > .feed-grupo-cab {
+  margin-top: 0;
+}
+.feed-grupo-qtd {
+  font-size: var(--t-13);
+  font-weight: 400;
+  color: var(--texto-3);
+  font-variant-numeric: tabular-nums;
+}
+.feed-grupo-cab .btn {
+  margin-left: auto;
+  min-height: 44px;
+}
+
+/* ---- O cartão do registro (4.3) ---- */
+
+.feed-lista {
+  border: 1px solid var(--borda);
+  border-radius: var(--r-m);
+  background: var(--card);
+  overflow: hidden;
+}
+/* 88 px é o piso no celular. Quando o cartão tem chip de status e botão de
+   próximo passo empilhados, ele cresce: dois alvos de toque de 44 px somam 88
+   px de coluna, e alvo de toque é regra dura, enquanto a altura do cartão é
+   medida de conforto. O cartão sem botão de passo fica exatamente nos 88 px. */
+.feed-item {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  min-height: 88px;
+  padding: var(--e2) var(--e4);
+  border-bottom: 1px solid var(--borda);
+}
+.feed-lista > .feed-item:last-child {
+  border-bottom: 0;
+}
+.feed-item:hover {
+  background: var(--fundo-2);
+}
+
+/* Coluna esquerda de 44 px: avatar de 32 px, ou a barra do setor quando o
+   agrupamento é por pessoa e o nome já está no cabeçalho do grupo. */
+.feed-item-avatar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 44px;
+}
+.feed-item-avatar .avatar {
+  width: 32px;
+  height: 32px;
+  font-size: var(--t-13);
+}
+.feed-item-barra {
+  flex: none;
+  align-self: stretch;
+  width: 3px;
+  border-radius: var(--r-pill);
+  background: var(--cor-setor, var(--borda-forte));
+}
+
+.feed-item-corpo {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: block;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.feed-item-topo {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: var(--t-13);
+  line-height: 1.3;
+}
+.feed-item-hora {
+  flex: none;
+  font-weight: 600;
+  color: var(--texto);
+  font-variant-numeric: tabular-nums;
+}
+.feed-item-quem {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--texto-2);
+}
+.feed-item-quem::before {
+  content: "\00b7";
+  margin-right: 6px;
+  color: var(--texto-3);
+}
+.feed-item-titulo {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--t-16);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--texto);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Cliente, local e carro numa linha só. O corte é no fim, e como o local vem de
+   dados.localDe (bairro e cidade), o bairro nunca é o pedaço que se perde. */
+.feed-item-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--t-14);
+  line-height: 1.3;
+  color: var(--texto-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* O carro corre como texto, não como caixa atômica: com inline-flex, quando a
+   linha não cabia a caixa inteira era escondida e sobrava o " · " da frente,
+   sozinho depois do endereço. Como texto ele entra na mesma reticência. */
+.feed-item-carro {
+  display: inline;
+  vertical-align: baseline;
+}
+.feed-item-carro .inicial {
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.feed-item-carro .inicial {
+  font-size: var(--t-12);
+}
+
+/* ---- Chip de status e botão de próximo passo (4.3 e 4.4) ---- */
+
+.feed-item-acoes {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+}
+.feed-status {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  margin: 8px 0;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  background: var(--fundo-2);
+  color: var(--texto-2);
+  font: inherit;
+  font-size: var(--t-13);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+button.feed-status {
+  cursor: pointer;
+}
+button.feed-status:hover {
+  border-color: var(--borda-forte);
+}
+/* Chip de 28 px com alvo de 44: a margem de 8 px em cima e embaixo vira área de toque. */
+button.feed-status {
+  position: relative;
+}
+button.feed-status::after {
+  content: "";
+  position: absolute;
+  inset: -8px 0;
+}
+.feed-status::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: var(--r-pill);
+  background: var(--cor-status, var(--texto-3));
+}
+/* Concluído troca o ponto pelos dois vistos (6.1). */
+.feed-status:has(.icone)::before {
+  display: none;
+}
+.feed-status .icone {
+  margin-right: 6px;
+}
+/* Agendado é o estado padrão, e estado padrão não grita (6.1). */
+.feed-status.status-confirmado {
+  background: var(--fundo-2);
+  color: var(--texto-2);
+}
+.feed-status.status-em-andamento {
+  background: var(--st-em-andamento-suave);
+  color: var(--texto);
+}
+.feed-status.status-concluido {
+  background: var(--oliva-suave);
+  color: var(--st-concluido);
+}
+.feed-status.status-nao-realizado {
+  background: var(--card);
+  border-color: var(--st-nao-realizado);
+  color: var(--st-nao-realizado);
+}
+.feed-status.status-cancelado {
+  background: transparent;
+  color: var(--st-cancelado);
+}
+
+.feed-item-passo {
+  min-height: 44px;
+  padding: 0 var(--e3);
+  font-size: var(--t-14);
+  white-space: nowrap;
+}
+
+/* ---- A folha dos quatro estados (4.4) ---- */
+
+/* No desktop a folha vira popover ancorado no chip: 220 px de largura (os
+   200 da direção mais o recuo), posição calculada por agenda.js a partir do
+   chip, sem véu escuro. No celular e no tablet continua folha na base. */
+@media (min-width: 1024px) {
+  .feed-status-popover .sheet-fundo { background: transparent; animation: none; }
+  .feed-status-popover .sheet-painel,
+  .sheet.feed-status-popover .sheet-painel {
+    position: fixed;
+    width: 220px;
+    max-height: min(70dvh, 100%);
+    border: 1px solid var(--borda);
+    box-shadow: var(--sombra-2);
+  }
+  .feed-status-popover .sheet-cab { padding-top: var(--e3); padding-bottom: 0; }
+  .feed-status-popover .sheet-titulo { font-size: var(--t-14); }
+  .feed-status-popover .campo-ajuda { display: none; }
+}
+
+.feed-status-opcao {
+  min-height: 44px;
+}
+.feed-status-opcao[aria-current="true"] {
+  background: var(--oliva-suave);
+}
+.feed-status-opcao[disabled] {
+  opacity: 0.55;
+}
+.feed-ponto {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-pill);
+  background: var(--cor-status, var(--texto-3));
+}
+
+/* ---- Estado vazio, rodapé e o botão do cabeçalho ---- */
+
+/* Um estado vazio só, nunca dois empilhados (4.7). */
+.feed > .vazio {
+  padding: var(--e6) var(--e4);
+}
+.feed .vazio-acao .btn {
+  min-height: 44px;
+}
+.feed > .amanha-linha {
+  margin-top: var(--e4);
+}
+.feed-copiar-dia {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* ---- Celular: o que se faz ganha a linha inteira ----------------- */
+
+/* Passada de crítica de 22/09/2026 (lote 5), medida em 375 px. A DIRECAO-2
+   4.3 desenhou o cartão com o chip de status e o botão de próximo passo numa
+   coluna à direita. Com o conteúdo real isso não fecha: "Em andamento" mais
+   "Concluir" comem 130 px, o avatar come 44 e o recuo come 32, e sobram 123 px
+   para a linha 2, que é justamente o que a pessoa foi ler. O resultado medido
+   era "Medidas pa...", "Montagem do N..." e "Manutenção de...", ou seja, a
+   informação principal cortada em doze caracteres.
+
+   No celular, então, o cartão vira duas linhas: em cima o texto na largura
+   toda, embaixo o chip e o botão, alinhados à esquerda. Dois ganhos, não um:
+   o título deixa de ser cortado e o FAB de 56 px, que mora no canto inferior
+   direito, para de cobrir o botão de próximo passo do cartão que estiver no
+   fim da lista. De 720 px para cima nada muda: lá o chip e o botão cabem na
+   direita e o cartão continua em 72 px, como a direção pede.
+
+   A altura sobe de 88 px para cerca de 124. É troca consciente: 88 px era
+   medida de conforto, e alvo de toque e texto legível são regra dura. */
+@media (max-width: 719px) {
+  .feed-item {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: center;
+    column-gap: var(--e3);
+    row-gap: var(--e1);
+  }
+  .feed-item-avatar { grid-column: 1; grid-row: 1; }
+  /* span 2 e não 1 / -1: a grade só declara colunas, então a linha -1 cairia na
+     primeira linha explícita e a barra do setor ficaria só na altura do texto. */
+  .feed-item-barra { grid-column: 1; grid-row: 1 / span 2; }
+  .feed-item-corpo { grid-column: 2; grid-row: 1; }
+  .feed-item-acoes {
+    grid-column: 2;
+    grid-row: 2;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--e3);
+  }
+  /* O chip mantém a margem de 8 px que vira alvo de toque de 44 px. */
+  .feed-item-passo { flex: none; }
+}
+
+/* ================================================================== */
+/* Tablet e desktop                                                    */
+/* ================================================================== */
+
+@media (min-width: 720px) {
+  /* O cartão baixa para 72 px porque o chip e o botão passam a caber lado a
+     lado; no celular eles ficam empilhados e o cartão precisa dos 88 px. */
+  .feed-item {
+    min-height: 72px;
+    padding: 6px var(--e4);
+  }
+  .feed-item-acoes {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--e3);
+  }
+}
+
+@media (max-width: 1023px) {
+  /* No celular o cabeçalho de 56 px não tem espaço para o rótulo inteiro: fica
+     o ícone, com o nome completo no aria-label do botão. */
+  .feed-copiar-dia-rotulo {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* ==================================================================
+   Direção 3 (docs/redesign/DIRECAO-3.md, lote 3)
+   ================================================================== */
+
+/* Duas coisas só entram aqui; o resto do lote mora em css/quadro.css, com os
+   prefixos quadro- e onde-.
+
+   1. A faixa "Onde estou" é a primeira coisa das três vistas de Hoje (2.5).
+   No feed ela vem antes da linha de resumo, e precisa do mesmo intervalo que
+   separa os outros blocos, senão ela cola no "Quinta-feira, 24 de setembro".
+
+   2. O segmento passou de duas opções para três (3.1). Medido em 375 px: com
+   os 14 px de recuo de cada opção, "Quadro", "Por hora" e "Por pessoa" somam
+   mais do que a coluna, e a pílula estourava para fora da tela. No celular o
+   recuo cai para 10 px, o desenho continua com 26 px de altura e o alvo de
+   toque continua nos 44 px, que vêm da área invisível do ::after. */
+.feed > .onde {
+  margin-bottom: var(--e4);
+}
+.feed-segmento {
+  max-width: 100%;
+}
+
+@media (max-width: 719px) {
+  .feed-segmento-opcao {
+    padding: 0 10px;
+  }
+}

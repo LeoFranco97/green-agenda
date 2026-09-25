@@ -1,0 +1,26 @@
+{
+  "name": "Green Agenda",
+  "short_name": "Green Agenda",
+  "description": "Agenda de operação da Green Decor: serviços, equipes e veículos.",
+  "id": "./index.html",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f7f3ee",
+  "theme_color": "#3a452b",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "categories": ["business", "productivity"],
+  "icons": [
+    { "src": "icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Agendar serviço", "short_name": "Agendar", "description": "Escolher o tipo de serviço, o dia e o horário livre.", "url": "./index.html#/agendar" },
+    { "name": "Serviços agendados", "short_name": "Serviços", "description": "Próximos, pendentes, passados e por período.", "url": "./index.html#/servicos/proximos" },
+    { "name": "Meu dia", "short_name": "Meu dia", "description": "O que a equipe tem para hoje.", "url": "./index.html#/meu-dia" },
+    { "name": "Calendário", "short_name": "Calendário", "description": "Dia, semana, mês e recursos.", "url": "./index.html#/agenda" }
+  ]
+}

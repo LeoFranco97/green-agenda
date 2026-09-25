@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR" data-tema="claro" data-densidade="confortavel">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Green Agenda</title>
+  <meta name="description" content="Agenda de operação da Green Decor: serviços, equipes e veículos.">
+  <meta name="theme-color" content="#3a452b">
+  <meta name="color-scheme" content="light dark">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Green Agenda">
+  <meta name="application-name" content="Green Agenda">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icone-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="./icone-192.png">
+  <!-- Uma família só, Inter variável de 400 a 700. Desde 25/09/2026 ela é
+       servida pela própria origem (vendor/fontes/, @font-face no topo de
+       css/base.css), sem Google Fonts nem preconnect: o app nativo e o modo
+       offline não dependem de rede para a tipografia. A Playfair saiu do
+       aplicativo inteiro, inclusive do login (docs/redesign/DIRECAO.md,
+       seção 1, com a decisão final do diretor pela Inter). -->
+  <link rel="preload" href="./vendor/fontes/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <!-- Módulo estilo. A ordem importa: tokens antes de tudo, e as folhas das
+       telas novas (listas, agendar) por último, para vencerem o empate de
+       especificidade com as folhas herdadas sem precisar de !important. -->
+  <link rel="stylesheet" href="./css/tokens.css">
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/componentes.css">
+  <link rel="stylesheet" href="./css/agenda.css">
+  <link rel="stylesheet" href="./css/telas.css">
+  <link rel="stylesheet" href="./css/listas.css">
+  <link rel="stylesheet" href="./css/agendar.css">
+  <!-- Direção 2 (docs/redesign/DIRECAO-2.md): a tela Registrar e a tela Hoje
+       têm folha própria, criadas pelo lote 1 e preenchidas pelos lotes 2 e 3. -->
+  <link rel="stylesheet" href="./css/registrar.css">
+  <link rel="stylesheet" href="./css/hoje.css">
+  <!-- Direção 3 (docs/redesign/DIRECAO-3.md): o quadro do dia e a faixa
+       "Onde estou", criada vazia pelo lote 1 e preenchida pelo lote 3. -->
+  <link rel="stylesheet" href="./css/quadro.css">
+  <link rel="modulepreload" href="./src/app.js">
+  <link rel="modulepreload" href="./src/util.js">
+  <link rel="modulepreload" href="./src/dados.js">
+  <link rel="modulepreload" href="./src/whatsapp.js">
+  <link rel="modulepreload" href="./src/ui.js">
+</head>
+<body>
+  <!-- Casca da aplicação (ver ESPECIFICACAO.md, seções 3.5, 11.5 e 14.3).
+       Os módulos escrevem dentro destes contêineres; nenhum outro elemento
+       raiz deve ser criado. O app (src/app.js) monta a navegação e a faixa
+       de estado; cada tela monta o próprio cabeçalho. -->
+  <div id="app">
+    <div id="faixa-estado" role="status" aria-live="polite"></div>
+    <header id="cabecalho"></header>
+    <nav id="nav-lateral" aria-label="Navegação principal" hidden></nav>
+    <main id="conteudo" tabindex="-1">
+      <noscript>
+        <div class="vazio">
+          <p class="vazio-titulo">A Green Agenda precisa de JavaScript</p>
+          <p class="vazio-texto">Ative o JavaScript no navegador e recarregue a página.</p>
+        </div>
+      </noscript>
+    </main>
+    <nav id="nav-inferior" aria-label="Navegação principal" hidden></nav>
+    <div id="camada-fab"></div>
+  </div>
+
+  <!-- Camadas sobrepostas, fora do fluxo do #app: painel de detalhe no
+       desktop (3.5), sheet, modal, toasts e a região viva para leitores de
+       tela (12). -->
+  <aside id="camada-painel" aria-label="Detalhe" hidden></aside>
+  <div id="camada-sheet" hidden></div>
+  <div id="camada-modal" hidden></div>
+  <div id="toasts"></div>
+  <div id="anuncios" class="visualmente-oculto" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Módulo app: ponto de entrada único. Todos os outros módulos são
+       importados a partir dele (ver ESPECIFICACAO.md, seção 14.2). -->
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>

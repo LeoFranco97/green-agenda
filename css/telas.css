@@ -1,0 +1,555 @@
+/* Green Agenda, módulo estilo: css/telas.css
+   Só o que não é componente genérico: login (.login, .login-lateral,
+   .login-form, seção 11.7), Meu dia (.cartao-proximo sticky, .contadores,
+   .num-grande), detalhe do serviço (ordem da seção 8.4, .rodape-acoes),
+   formulário de serviço (blocos da seção 8.1, .chips-tipo, .chips-recurso,
+   .lista-pessoas, .cartao-carro, .busca-cliente), recursos e cadastros
+   (fichas, .mini-semana), conta, notificações, auditoria, sincronização.
+   As classes de tela que não constam da 11.5 estão listadas no relatório
+   do módulo (.login-*, .meu-dia*, .detalhe-*, .form-*, .ficha-*, .conta-*,
+   .audit-*, .fila-*).
+
+   Redesenho de 18/09/2026 (docs/redesign/DIRECAO.md, lote 6):
+   - nenhuma classe daqui pede --fonte-titulo: a Playfair saiu do app inteiro,
+     inclusive do login;
+   - os apelidos de 15 e 17 px saíram: cada uso virou 14 px (texto de interface)
+     ou 16 px (nome, endereço e título de cartão), que é a escala da seção 1.2;
+   - no login, o título do formulário para de disputar com a frase do painel
+     oliva: a frase é a voz principal no desktop (auditoria 7.1). */
+
+/* ==================================================================
+   1. Login (11.7)
+   ================================================================== */
+.login {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--fundo);
+}
+.login-lateral { display: none; }
+/* .login-principal segura o formulário e, no modo local, o seletor de conta
+   abaixo dele. É ela que centraliza e rola; o formulário só empilha campos. */
+.login-principal {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: calc(var(--seg-topo) + var(--e7)) var(--e5) calc(var(--seg-base) + var(--e6));
+}
+.login-form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.login-logo { display: flex; justify-content: center; margin-bottom: var(--e5); }
+.login-logo img, .login-logo svg { width: 120px; height: auto; }
+.login-titulo {
+  font-weight: 600;
+  font-size: var(--t-28);
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  text-align: center;
+  margin-bottom: var(--e1);
+}
+.login-sub { font-size: var(--t-14); color: var(--texto-2); text-align: center; margin-bottom: var(--e6); }
+.login-form .campo { margin-bottom: var(--e4); }
+.login-opcoes { display: flex; align-items: center; justify-content: space-between; gap: var(--e3); margin: var(--e1) 0 var(--e4); }
+.login-form .btn-primario { margin-top: var(--e2); }
+.login-erro {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--e2);
+  padding: var(--e3) var(--e4);
+  margin-bottom: var(--e4);
+  background: var(--erro-suave);
+  color: var(--erro);
+  border-radius: var(--r-s);
+  font-size: var(--t-14);
+  font-weight: 600;
+}
+.login-erro:empty { display: none; }
+.login-rodape { margin-top: var(--e6); text-align: center; font-size: var(--t-13); color: var(--texto-2); line-height: 1.5; }
+
+/* Seletor de conta (modo local): "Ou entre como", pessoas do seed por perfil.
+   Sem moldura: o bloco é um cartão liso com rolagem própria, para a lista caber
+   na tela do celular sem empurrar o formulário. Linhas de 56 px, alvo de toque. */
+.login-contas { width: 100%; margin-top: var(--e6); }
+.login-contas-titulo { font-size: var(--t-16); font-weight: 600; letter-spacing: -0.01em; margin-bottom: var(--e1); }
+.login-contas-sub { font-size: var(--t-13); color: var(--texto-2); margin-bottom: var(--e3); }
+.login-contas-busca { margin-bottom: var(--e3); }
+.login-contas-lista {
+  max-height: 46dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  background: var(--card);
+  border-radius: var(--r-m);
+  padding: var(--e1) 0;
+}
+.login-contas-grupo-titulo {
+  font-size: var(--t-12);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--texto-3);
+  padding: var(--e3) var(--e4) var(--e1);
+}
+.login-conta {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--e2) var(--e4);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.login-conta:hover { background: var(--fundo-2); }
+.login-conta:active { background: var(--fundo-3); }
+.login-conta:focus-visible { outline: 2px solid var(--foco); outline-offset: -2px; }
+.login-conta[hidden] { display: none; }
+.login-conta-corpo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.login-conta-nome { font-size: var(--t-14); font-weight: 600; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.login-conta-cargo { font-size: var(--t-13); color: var(--texto-2); line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.login-conta-perfil { flex: none; }
+.login-contas-vazio { padding: var(--e4); font-size: var(--t-14); color: var(--texto-2); text-align: center; }
+
+@media (min-width: 1024px) {
+  .login { flex-direction: row; }
+  .login-lateral {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 0 0 44%;
+    max-width: 640px;
+    padding: var(--e7) var(--e7) var(--e6);
+    background: var(--oliva-escuro);
+    color: var(--nude);
+  }
+  .login-lateral .login-logo { justify-content: flex-start; margin: 0; }
+  .login-lateral .login-logo img, .login-lateral .login-logo svg { width: 180px; }
+  /* A voz principal do login é esta frase, em 32 px sobre o oliva. */
+  .login-frase {
+    font-weight: 600;
+    font-size: var(--t-32);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--nude);
+    max-width: 14ch;
+    margin-top: auto;
+    padding-top: var(--e7);
+  }
+  .login-lateral-rodape { font-size: var(--t-13); color: var(--nude); opacity: 0.75; margin-top: var(--e5); }
+  .login-principal {
+    flex: 1;
+    max-width: none;
+    margin: 0;
+    justify-content: center;
+    align-items: flex-start;
+    padding: var(--e7) 8vw;
+    overflow-y: auto;
+  }
+  .login-form > * { width: 100%; max-width: 400px; }
+  .login-form .login-logo { display: none; }
+  .login-contas { max-width: 400px; }
+  .login-contas-lista { max-height: 40vh; }
+  .login-titulo, .login-sub, .login-rodape { text-align: left; }
+  /* No desktop a frase do painel já é o título da tela; o nome do produto aqui
+     desce um degrau para não haver dois títulos quase do mesmo tamanho
+     dizendo coisas diferentes (auditoria 7.1). */
+  .login-titulo { font-size: var(--t-20); letter-spacing: 0; }
+}
+
+/* Tela larga: o seletor de conta fica ao lado do formulário, não abaixo. */
+@media (min-width: 1440px) {
+  .login-principal { flex-direction: row; align-items: center; gap: var(--e7); padding: var(--e7) 6vw; }
+  .login-form { flex: 0 1 400px; }
+  .login-contas { flex: 0 1 420px; max-width: 420px; margin-top: 0; }
+  .login-contas-lista { max-height: 60vh; }
+}
+
+/* ==================================================================
+   2. Meu dia (7.1)
+   ================================================================== */
+.meu-dia { padding-top: var(--e2); }
+.meu-dia-cab { padding: var(--e3) 0 var(--e2); }
+.meu-dia .contadores { margin-top: var(--e3); }
+
+/* Cartão fixo do próximo serviço */
+.cartao-proximo {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--card);
+  border: 1px solid var(--borda);
+  border-radius: var(--r-m);
+  box-shadow: var(--sombra-1);
+  padding: var(--e4);
+  margin-bottom: var(--e5);
+}
+/* Estado compacto opcional: o JS pode marcar data-compacto ao rolar a lista,
+   deixando só hora, contagem, título e o botão do passo visíveis. */
+.cartao-proximo[data-compacto] > :not(.cartao-proximo-topo):not(.cartao-proximo-titulo):not(.btn-grande):not(.cartao-proximo-aguardando) { display: none; }
+.cartao-proximo[data-compacto] { padding: var(--e3) var(--e4); }
+.cartao-proximo[data-compacto] .num-grande { font-size: var(--t-28); }
+.cartao-proximo[data-compacto] .btn-grande { min-height: 48px; margin-top: var(--e2); }
+.cartao-proximo-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--e3); }
+.cartao-proximo .num-grande { color: var(--texto); }
+.cartao-proximo-contagem { margin-top: 6px; }
+.cartao-proximo-titulo { font-size: var(--t-20); font-weight: 600; line-height: 1.2; margin-top: var(--e2); }
+/* O endereço é o que decide a rota de quem está na rua: fica em 16 px, e o
+   bairro tem prioridade sobre o logradouro na segunda linha (DIRECAO 3.7). */
+.cartao-proximo-endereco {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-size: var(--t-16);
+  color: var(--texto-2);
+  line-height: 1.4;
+  margin-top: var(--e1);
+  border-radius: var(--r-s);
+}
+.cartao-proximo-endereco:hover { color: var(--texto); }
+.cartao-proximo-obs {
+  font-size: var(--t-14);
+  color: var(--texto-2);
+  margin-top: var(--e2);
+  padding-left: var(--e3);
+  border-left: 2px solid var(--borda-forte);
+}
+.cartao-proximo-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--e3); }
+.cartao-proximo .grid-contato { margin: var(--e4) 0 var(--e3); }
+.cartao-proximo .btn-grande { width: 100%; }
+.cartao-proximo-secundaria { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--e2); margin-top: var(--e2); }
+/* Base no conteúdo: com a Inter, "Checklist 0 de 6" e "Avisar atraso" não cabem lado a lado em 375 px; o segundo desce. */
+.cartao-proximo-secundaria .btn { flex: 1 1 auto; }
+.cartao-proximo-aguardando {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--e2);
+  min-height: 56px;
+  border: 1px dashed var(--borda-forte);
+  border-radius: var(--r-m);
+  color: var(--texto-2);
+  font-size: var(--t-14);
+  font-weight: 600;
+}
+.cartao-proximo-vazio .vazio { padding: var(--e4) 0; }
+.chip-contagem { color: var(--acao); border-color: var(--acao); }
+.chip-contagem[data-agora] { background: var(--acao); color: var(--texto-inverso); }
+.chip-contagem[data-atrasado] { background: var(--erro); color: var(--texto-inverso); border-color: var(--erro); }
+
+/* Rota do dia */
+.rota-dia-cab { display: flex; align-items: center; justify-content: space-between; gap: var(--e2); flex-wrap: wrap; margin-bottom: var(--e3); }
+.rota-dia-cab .btn-grupo { margin-left: auto; }
+.rota-dia-aviso { font-size: var(--t-13); color: var(--alerta); margin-bottom: var(--e2); }
+.rota-lista { display: flex; flex-direction: column; gap: var(--e2); }
+.rota-lista .cartao-servico + .cartao-servico { margin-top: 0; }
+.amanha-linha { display: flex; align-items: center; gap: var(--e2); min-height: 44px; font-size: var(--t-14); color: var(--texto-2); margin-top: var(--e5); }
+.amanha-linha strong { color: var(--texto); }
+
+/* Meu dia, variante gestão e setor */
+.meu-dia-secao .lista { gap: var(--e2); }
+.meu-dia .secao-cab .secao-acao { margin-left: auto; }
+
+/* ==================================================================
+   3. Detalhe do serviço (8.4)
+   ================================================================== */
+.detalhe { padding-top: var(--e2); }
+.detalhe-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: var(--e2) 0 var(--e4); }
+.detalhe-cliente { margin-bottom: var(--e4); }
+.detalhe-cliente-nome { font-size: var(--t-16); font-weight: 600; }
+.detalhe-cliente-tel { font-size: var(--t-14); color: var(--texto-2); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.detalhe-endereco {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-size: var(--t-16);
+  line-height: 1.4;
+  margin-top: var(--e2);
+  border-radius: var(--r-s);
+  color: var(--texto);
+}
+.detalhe-endereco:hover { color: var(--acao); }
+.detalhe-endereco[data-pendente] { color: var(--alerta); font-weight: 600; }
+.detalhe-obs { font-size: var(--t-14); color: var(--texto-2); margin-top: var(--e2); padding-left: var(--e3); border-left: 2px solid var(--borda-forte); }
+.detalhe-quem { display: flex; flex-wrap: wrap; gap: var(--e2); align-items: center; }
+.detalhe-quem .chip { height: 36px; padding-right: 12px; }
+.detalhe-quem .chip .avatar-pq { width: 24px; height: 24px; margin-left: -4px; }
+.detalhe-quem .btn-pq { margin-left: auto; }
+.detalhe-motivos .cartao + .cartao { margin-top: var(--e3); }
+/* Caixa alta sempre com 0,09em (DIRECAO 1.2): em 13 px com 0,04em, "PRECISA DE
+   DECISÃO" e "MOTIVO DO CANCELAMENTO" viravam um bloco cinza compacto. */
+.detalhe-motivo-rotulo { font-size: var(--t-12); font-weight: 600; text-transform: uppercase; letter-spacing: 0.09em; color: var(--texto-2); margin-bottom: var(--e1); }
+.detalhe-motivo-texto { font-size: var(--t-14); }
+.detalhe-motivo-meta { font-size: var(--t-13); color: var(--texto-2); margin-top: var(--e1); }
+.reagendamento-linha { display: flex; flex-wrap: wrap; gap: var(--e1) var(--e2); font-size: var(--t-14); padding: var(--e2) 0; border-top: 1px solid var(--borda); font-variant-numeric: tabular-nums; }
+.reagendamento-linha:first-of-type { border-top: 0; }
+.reagendamento-linha .de { color: var(--texto-2); text-decoration: line-through; }
+.assinatura-mini { width: 160px; height: auto; border: 1px solid var(--borda); border-radius: var(--r-s); background: var(--card); margin-top: var(--e2); }
+.faixa-liberacao .btn-grupo { margin-top: var(--e3); }
+.tela-erro { padding-top: var(--e7); }
+
+/* Menu de ações (sheet "...") */
+.menu-acoes .item { min-height: 52px; }
+.menu-acoes .item-perigo { color: var(--erro); }
+
+/* ==================================================================
+   4. Formulário de serviço (8.1)
+   ================================================================== */
+.form-servico { padding-top: var(--e2); }
+.form-bloco { margin-top: var(--e5); }
+.form-bloco:first-of-type { margin-top: var(--e3); }
+.form-bloco-titulo {
+  font-size: var(--t-12);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--texto-2);
+  margin-bottom: var(--e3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--e2);
+}
+.form-bloco-titulo .btn { text-transform: none; letter-spacing: 0; }
+.form-bloco-recolhido {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  min-height: 56px;
+  padding: var(--e2) var(--e3);
+  background: var(--oliva-suave);
+  border-radius: var(--r-s);
+  font-size: var(--t-14);
+  font-weight: 600;
+}
+.form-bloco-recolhido .btn { margin-left: auto; flex: none; }
+.form-bloco-espera { font-size: var(--t-14); color: var(--texto-2); padding: var(--e3) 0; font-style: italic; }
+.form-setor-texto { font-size: var(--t-14); padding: var(--e2) 0; }
+.form-servico .fita-datas { margin-bottom: var(--e3); }
+.form-servico .regua { margin-bottom: var(--e2); }
+.form-linha-carro { display: flex; align-items: center; justify-content: space-between; gap: var(--e2); min-height: 48px; }
+.form-linha-carro .btn { flex: none; }
+.form-aviso-carro { font-size: var(--t-13); color: var(--alerta); font-weight: 600; margin-bottom: var(--e2); }
+.form-nota { font-size: var(--t-13); color: var(--texto-2); margin-top: var(--e2); display: flex; gap: var(--e1); align-items: flex-start; }
+.form-nota .icone { flex: none; margin-top: 1px; }
+.cliente-novo { margin-top: var(--e3); padding: var(--e3); background: var(--fundo-2); border-radius: var(--r-s); }
+.cliente-novo .campo { margin-bottom: var(--e3); }
+.endereco-chips { margin-bottom: var(--e3); }
+.endereco-campos .linha-campos { margin-bottom: var(--e3); }
+.form-servico .faixa-conflito { margin-top: var(--e5); }
+
+/* ==================================================================
+   5. Recursos: veículos, equipes, pessoas (9.1 a 9.3)
+   ================================================================== */
+.ficha-cab { display: flex; align-items: center; gap: var(--e3); margin: var(--e3) 0 var(--e4); }
+.ficha-cab .inicial-g { width: 48px; height: 48px; font-size: var(--t-20); }
+.ficha-cab-corpo { flex: 1; min-width: 0; }
+.ficha-cab-nome { font-size: var(--t-20); font-weight: 600; line-height: 1.2; }
+.ficha-cab-sub { font-size: var(--t-14); color: var(--texto-2); }
+.ficha-cab .chip { flex: none; }
+.ficha-grade { margin: var(--e3) 0 var(--e5); }
+.ficha-grade .grade { height: 480px; border: 1px solid var(--borda); border-radius: var(--r-m); overflow: hidden; }
+.cartao-veiculo, .cartao-equipe, .cartao-pessoa { display: flex; gap: var(--e3); align-items: flex-start; }
+.cartao-veiculo .inicial-g, .cartao-equipe .avatares, .cartao-pessoa .avatar { flex: none; margin-top: 2px; }
+.cartao-recurso-corpo { flex: 1; min-width: 0; }
+.cartao-recurso-nome { font-size: var(--t-16); font-weight: 600; display: flex; align-items: center; gap: var(--e2); flex-wrap: wrap; }
+.cartao-recurso-sub { font-size: var(--t-14); color: var(--texto-2); margin-top: 2px; }
+.cartao-recurso-linha { font-size: var(--t-14); margin-top: var(--e2); display: flex; align-items: center; gap: var(--e2); flex-wrap: wrap; }
+.cartao-recurso-linha .chip { height: 26px; padding: 0 8px; }
+.cartao-recurso .cartao-acoes { margin-top: var(--e3); }
+.secao-recolhida summary, .secao-recolhida > .secao-titulo { cursor: pointer; list-style: none; display: flex; align-items: center; gap: var(--e1); min-height: 44px; }
+.secao-recolhida summary::-webkit-details-marker { display: none; }
+.membros-lista { display: flex; flex-wrap: wrap; gap: var(--e2); }
+.membro-chip { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 10px 0 4px; border: 1px solid var(--borda); border-radius: var(--r-pill); font-size: var(--t-14); font-weight: 600; }
+.indisp-lista .item { min-height: 56px; }
+.indisp-periodo { font-size: var(--t-14); font-weight: 600; font-variant-numeric: tabular-nums; }
+.indisp-motivo { font-size: var(--t-14); color: var(--texto-2); }
+.afetados { margin-top: var(--e3); padding: var(--e3); background: var(--alerta-suave); border-radius: var(--r-s); }
+.afetados-titulo { font-size: var(--t-14); font-weight: 600; color: var(--alerta); margin-bottom: var(--e2); }
+.afetados .cartao-servico { border-color: transparent; }
+.trocar-carro-lista .cartao-carro + .cartao-carro { margin-top: var(--e2); }
+.pessoa-linha-turno { display: flex; align-items: center; gap: 6px; font-size: var(--t-13); color: var(--texto-2); }
+
+/* ==================================================================
+   6. Cadastros (9.4 a 9.7)
+   ================================================================== */
+.cadastros-hub .item { min-height: 64px; }
+.grade-icones { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: var(--e2); }
+.grade-icones .btn-icone, .icone-escolha {
+  width: 100%;
+  height: 56px;
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--r-s);
+  background: var(--card);
+  color: var(--texto-2);
+}
+.grade-icones [data-ativo], .grade-icones [aria-pressed="true"] { background: var(--oliva-suave); border-color: var(--acao); color: var(--acao); }
+.tipo-linha .item-icone { color: var(--acao); background: var(--oliva-suave); }
+.horario-linha {
+  display: grid;
+  grid-template-columns: 56px 44px 1fr 1fr;
+  gap: var(--e2);
+  align-items: center;
+  min-height: 56px;
+  padding: var(--e2) 0;
+  border-bottom: 1px solid var(--borda);
+}
+.horario-linha:last-child { border-bottom: 0; }
+.horario-linha-dia { font-size: var(--t-14); font-weight: 600; }
+/* So a inicial: capitalize em tudo virava "Paisagismo E Jardins" nos setores. */
+.horario-linha-dia::first-letter { text-transform: uppercase; }
+.horario-linha .entrada { min-height: 44px; padding: 0 var(--e2); }
+.horario-linha[data-fechado] .entrada { opacity: 0.4; pointer-events: none; }
+.horario-linha-setor { grid-template-columns: minmax(0, 1fr) 44px 96px 96px; }
+.feriado-linha { display: flex; align-items: center; gap: var(--e3); min-height: 48px; padding: var(--e1) 0; border-bottom: 1px solid var(--borda); }
+.feriado-linha:last-child { border-bottom: 0; }
+.feriado-data { font-variant-numeric: tabular-nums; font-weight: 600; flex: none; width: 96px; }
+.feriado-nome { flex: 1; min-width: 0; }
+.escala-linha { display: grid; grid-template-columns: 96px 44px 1fr 1fr; gap: var(--e2); align-items: center; min-height: 52px; }
+.folgas-lista { display: flex; flex-wrap: wrap; gap: var(--e2); margin-top: var(--e2); }
+.dados-demo-aviso { font-size: var(--t-14); line-height: 1.5; color: var(--texto-2); margin-bottom: var(--e4); }
+.uso-armazenamento .item { min-height: 40px; }
+.uso-armazenamento .item-fim { font-variant-numeric: tabular-nums; }
+.uso-armazenamento-total { font-weight: 600; }
+.uso-armazenamento[data-alerta] .uso-armazenamento-total { color: var(--alerta); }
+.form-rodape-acoes { display: flex; gap: var(--e2); justify-content: flex-end; margin-top: var(--e5); flex-wrap: wrap; }
+
+/* ==================================================================
+   7. Conta (9.10)
+   ================================================================== */
+.conta-perfil { display: flex; align-items: center; gap: var(--e4); }
+.conta-perfil-corpo { flex: 1; min-width: 0; }
+.conta-perfil-nome { font-size: var(--t-20); font-weight: 600; line-height: 1.2; }
+.conta-perfil-cargo { font-size: var(--t-14); color: var(--texto-2); }
+.conta-perfil-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--e2); }
+.conta-perfil-email { font-size: var(--t-14); color: var(--texto-2); margin-top: var(--e1); overflow-wrap: anywhere; }
+.conta-status { display: flex; gap: var(--e2); flex-wrap: wrap; }
+.conta-secao .linha-interruptor:first-of-type { border-top: 0; }
+.conta-opcoes { display: flex; gap: var(--e2); flex-wrap: wrap; }
+.conta-conexao-estado { display: flex; align-items: center; gap: var(--e2); font-size: var(--t-14); font-weight: 600; }
+.conta-conexao-estado .ponto-conexao { width: 10px; height: 10px; border-radius: var(--r-pill); background: var(--ok); flex: none; }
+.conta-conexao-estado[data-offline] .ponto-conexao { background: var(--erro); }
+.conta-instalar-passos { font-size: var(--t-14); color: var(--texto-2); line-height: 1.5; padding-left: var(--e4); list-style: decimal; }
+.atalhos-lista { display: grid; grid-template-columns: auto 1fr; gap: var(--e2) var(--e4); align-items: center; font-size: var(--t-14); }
+.atalhos-lista[data-desligados] { opacity: 0.55; }
+kbd, .tecla {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--borda-forte);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: var(--fundo-2);
+  font-family: var(--fonte-ui);
+  font-size: var(--t-13);
+  font-weight: 600;
+  color: var(--texto);
+}
+.conta-sair { margin-top: var(--e5); }
+.conta-versao { text-align: left; font-size: var(--t-13); color: var(--texto-2); margin-top: var(--e5); padding-bottom: var(--e4); }
+
+/* ==================================================================
+   8. Notificações (9.8)
+   ================================================================== */
+.notif-lista { display: flex; flex-direction: column; }
+.notif-lista .notif:last-child { border-bottom: 0; }
+.notificacoes .abas { margin-top: var(--e2); }
+
+/* ==================================================================
+   9. Auditoria (9.9)
+   ================================================================== */
+.audit-filtros { display: flex; flex-direction: column; gap: var(--e2); margin-bottom: var(--e4); }
+.audit-filtros .linha-campos { gap: var(--e2); }
+/* Celular: duas faixas e pronto (chips de período, depois os três filtros lado
+   a lado), para a lista começar antes dos 120 px de controle. O rótulo continua
+   para o leitor de tela; a primeira opção de cada select já diz o que ele filtra. */
+.audit-filtros > .campo { margin-bottom: 0; min-width: 0; }
+@media (max-width: 1023px) {
+  .audit-filtros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--e2); }
+  .audit-filtros > .linha-chips { grid-column: 1 / -1; }
+  .audit-filtros > .campo > label {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+  .audit-filtros .selecao { padding-left: var(--e2); padding-right: var(--e5); text-overflow: ellipsis; }
+}
+.audit-item { align-items: flex-start; padding-top: var(--e3); padding-bottom: var(--e3); }
+.audit-item .avatar { margin-top: 2px; }
+.audit-quando { font-size: var(--t-13); color: var(--texto-2); font-variant-numeric: tabular-nums; white-space: nowrap; flex: none; width: 92px; }
+.audit-acao, .audit-rotulo, .audit-motivo, .audit-origem { display: block; }
+.audit-acao { font-size: var(--t-14); font-weight: 600; }
+.audit-rotulo { font-size: var(--t-14); color: var(--texto-2); }
+.audit-motivo { font-size: var(--t-14); color: var(--texto-2); font-style: italic; margin-top: 2px; }
+.audit-origem { font-size: var(--t-13); color: var(--texto-2); }
+.audit-campos { margin-top: var(--e2); font-size: var(--t-13); color: var(--texto-2); }
+.audit-campos summary { cursor: pointer; font-weight: 600; color: var(--acao); min-height: 32px; display: flex; align-items: center; list-style: none; }
+.audit-campos summary::-webkit-details-marker { display: none; }
+.audit-campos ul { display: flex; flex-direction: column; gap: 2px; padding: var(--e1) 0 0 var(--e3); }
+.audit-campos li { font-variant-numeric: tabular-nums; }
+.audit-campos .antes { text-decoration: line-through; opacity: 0.8; }
+.audit-campos .depois { color: var(--texto); font-weight: 600; }
+
+/* ==================================================================
+   10. Sincronização (9.11)
+   ================================================================== */
+.fila-item { align-items: flex-start; padding-top: var(--e3); padding-bottom: var(--e3); }
+.fila-op { font-size: var(--t-14); font-weight: 600; }
+.fila-op::first-letter { text-transform: uppercase; }
+.fila-meta { font-size: var(--t-13); color: var(--texto-2); margin-top: 2px; display: flex; gap: var(--e2); flex-wrap: wrap; }
+.fila-estado { font-size: var(--t-13); font-weight: 600; }
+.fila-estado[data-estado="pendente"] { color: var(--alerta); }
+.fila-estado[data-estado="enviando"] { color: var(--info); }
+.fila-estado[data-estado="enviada"] { color: var(--ok); }
+.fila-estado[data-estado="erro"] { color: var(--erro); }
+.sincronizacao-acoes { display: flex; gap: var(--e2); margin: var(--e3) 0 var(--e4); flex-wrap: wrap; }
+
+/* ==================================================================
+   11. Desktop
+   ================================================================== */
+@media (min-width: 1024px) {
+  .meu-dia-colunas { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--e6); align-items: start; }
+  .cartao-proximo { position: static; padding: var(--e5); }
+  .cartao-proximo .btn-grande { width: auto; min-width: 280px; }
+  .detalhe-cliente .grid-contato { max-width: 440px; }
+  .form-servico { max-width: 760px; }
+  .form-servico .lista-pessoas { max-height: 420px; overflow-y: auto; }
+  .cartao-carro { max-width: 520px; }
+  .ficha-grade .grade { height: 560px; }
+  .recursos-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: var(--e4); }
+  .recursos-lista .cartao + .cartao { margin-top: 0; }
+  .conta-colunas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--e5); align-items: start; }
+  .conta-colunas .cartao + .cartao { margin-top: 0; }
+  /* Período em linha própria; os três selects dividem a de baixo, alinhados pela base.
+     Antes o chip "Tudo" ficava por baixo do select Pessoa, 16 px desalinhado. */
+  .audit-filtros { flex-direction: row; flex-wrap: wrap; align-items: flex-end; }
+  .audit-filtros > .linha-chips { flex: 1 1 100%; }
+  .audit-filtros > .campo { flex: 1 1 200px; max-width: 280px; }
+  .cadastros-hub { max-width: 640px; }
+  /* Lista e Meu dia (gestão e setor): coluna de leitura à esquerda, espaço à direita para a camada de detalhe (7.8) */
+  #conteudo .visao-lista, #conteudo .meu-dia-gestao, #conteudo .meu-dia-setor { max-width: 760px; }
+  /* Ações dos itens de atenção à direita, com largura natural (11.3) */
+  .visao-lista .cartao-servico-acoes, .meu-dia-gestao .cartao-servico-acoes, .meu-dia-setor .cartao-servico-acoes { justify-content: flex-end; }
+  .visao-lista .cartao-servico-acoes .btn, .meu-dia-gestao .cartao-servico-acoes .btn, .meu-dia-setor .cartao-servico-acoes .btn { flex: none; width: auto; }
+  .horario-linha { grid-template-columns: 120px 44px 140px 140px; }
+  .escala-linha { grid-template-columns: 140px 44px 140px 140px; }
+}
+
+@media (min-width: 1200px) {
+  #camada-painel .detalhe, #camada-painel .form-servico { padding-top: 0; max-width: none; }
+  #camada-painel .cartao-proximo { position: static; }
+  #camada-painel .grid-contato { max-width: none; }
+  #camada-painel .cab-tela { padding-left: var(--e5); padding-right: var(--e3); }
+}

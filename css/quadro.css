@@ -1,0 +1,732 @@
+/* Green Agenda, módulo estilo: css/quadro.css
+   O quadro do dia e a faixa "Onde estou" (docs/redesign/DIRECAO-3.md,
+   seções 2.5 e 3): a faixa de presença no topo de Hoje com os cinco botões
+   de 48 px e o bloco "desde HH:MM" com o botão Trocar; os números grandes
+   que contam pessoas (40 px no celular, 48 no desktop) com a barra de 4 px
+   na cor do estado; os grupos de pessoas por lugar (Em serviço, Na loja, No
+   galpão, Na rua, Outro lugar, Sem aviso, Folga) com o cartão de pessoa de
+   duas colunas no celular e auto-fill de 200 px no desktop; o bloco "Sem
+   aviso" tracejado com os botões "Pedir a agenda" e "Avisar no app"; a
+   linha do dia de 08:00 às 19:00; e o layout de duas colunas (1fr mais
+   320 px) quando o próprio quadro passa de 900 px, com um único ponto de
+   quebra.
+
+   Dono: lote 3 (src/agenda.js, src/icones.js, css/hoje.css e este arquivo).
+   O lote 1 só cria o arquivo e o liga no index.html e no pré-cache do sw.js;
+   ele nasce sem nenhuma regra.
+
+   Regras de convivência (DIRECAO-3, seção 0):
+   - prefixos de classe reservados: quadro- e onde-;
+   - nenhum hexadecimal aqui: cor só por token de css/tokens.css. O dourado
+     (--st-em-andamento) é barra de 4 px, ponto de 10 px e fundo
+     --st-em-andamento-suave, nunca texto; o nude (--nude) não é borda nem
+     texto;
+   - o cartão "Sem aviso" é o único tracejado da tela (2 px, --borda-forte);
+   - título de grupo em 12 px caixa alta com letter-spacing de 0.1em em
+     --texto-2;
+   - Inter em tudo, com tabular-nums em hora, data e número;
+   - alvo de toque de 44 px em tudo que se toca, contando a margem;
+   - o quadro não usa .col-760: max-width de 1200 px com duas colunas no
+     desktop, uma coluna com recuo de 16 px no celular. As vistas "Por hora"
+     e "Por pessoa" continuam em css/hoje.css, sem mudança. */
+
+/* ==================================================================
+   0. A cor de cada lugar, em um lugar só
+   ================================================================== */
+
+/* dados.LUGARES (src/dados.js, 2.1) diz o nome do token de cada lugar, e é
+   aqui que o nome vira valor. src/agenda.js só escreve a classe já prefixada
+   (classeLugar), então nenhuma cor nasce no JavaScript e nenhum hexadecimal
+   nasce fora de css/tokens.css. Quem usa --quadro-cor: a barra de 4 px do
+   cartão de pessoa, a barra do bloco "Onde estou" e o topo do número grande.
+   Folga não tem barra, e por isso não tem classe de cor. */
+.quadro-cor-set-mov { --quadro-cor: var(--set-mov); }
+.quadro-cor-set-ent { --quadro-cor: var(--set-ent); }
+.quadro-cor-set-cor { --quadro-cor: var(--set-cor); }
+.quadro-cor-st-em-andamento { --quadro-cor: var(--st-em-andamento); }
+.quadro-cor-st-atrasado { --quadro-cor: var(--st-atrasado); }
+.quadro-cor-info { --quadro-cor: var(--info); }
+
+/* ==================================================================
+   1. A faixa "Onde estou" (2.5)
+   ================================================================== */
+
+/* Ela abre as três vistas de Hoje, então mora aqui e não em css/hoje.css: o
+   prefixo onde- é deste lote. Antes do toque a faixa é neutra, sem cor
+   nenhuma; a cor só entra depois que a pessoa diz onde está. */
+.onde {
+  margin: 0 0 var(--e4);
+  padding: var(--e3) var(--e4);
+  border: 1px solid var(--borda);
+  border-radius: var(--r-m);
+  background: var(--card);
+}
+.onde-titulo {
+  margin: 0 0 var(--e2);
+  font-size: var(--t-12);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--texto-2);
+}
+
+/* Cinco botões em duas linhas de três no celular e em uma linha de cinco no
+   desktop. Ícone em cima e rótulo embaixo, e não lado a lado como a 2.5
+   desenhou: medido em 375 px, a célula da grade de três tem 98 px e "No
+   galpão" com o ícone à esquerda pede 120. Em coluna o rótulo cabe inteiro,
+   e o alvo continua acima dos 44 px. */
+.onde-botoes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--e2);
+}
+.onde-botao {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 52px;
+  padding: var(--e2) var(--e1);
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--r-s);
+  background: var(--card);
+  color: var(--texto);
+  font: inherit;
+  font-size: var(--t-14);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+}
+.onde-botao .icone {
+  flex: none;
+  color: var(--texto-2);
+}
+.onde-botao:hover {
+  border-color: var(--acao);
+  background: var(--oliva-suave);
+}
+.onde-botao:hover .icone {
+  color: var(--acao);
+}
+
+/* O campo de "Outro lugar": nasce escondido e aparece sem re-renderizar, para
+   o foco e o teclado não caírem no meio da digitação. */
+.onde-outro {
+  margin-top: var(--e3);
+}
+.onde-outro-linha {
+  display: flex;
+  gap: var(--e2);
+  margin-top: 6px;
+}
+.onde-outro-campo {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.onde-outro-linha .btn {
+  flex: none;
+  min-height: 48px;
+}
+
+/* Estado depois do toque: um bloco só, com a barra de 4 px na cor do lugar. */
+.onde-atual {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  min-height: 56px;
+  padding: var(--e2) var(--e3) var(--e2) var(--e4);
+  border: 1px solid var(--borda);
+  border-radius: var(--r-s);
+  background: var(--card);
+  overflow: hidden;
+}
+.onde-atual-barra {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--quadro-cor, var(--borda-forte));
+}
+.onde-atual-icone {
+  flex: none;
+  display: flex;
+  color: var(--texto-2);
+}
+.onde-atual-texto {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.onde-atual-rotulo {
+  font-size: var(--t-16);
+  font-weight: 600;
+  color: var(--texto);
+}
+/* Hora com tabular-nums: os algarismos da Inter são proporcionais por padrão. */
+/* Em serviço o detalhe é "Entrega, Tatiane Moraes, desde 14:30", e em 375 px
+   ele não cabe numa linha: cortado, some justamente a hora. Duas linhas, e a
+   faixa cresce os poucos pixels necessários. */
+.onde-atual-detalhe {
+  font-size: var(--t-13);
+  color: var(--texto-2);
+  font-variant-numeric: tabular-nums;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+.onde-trocar {
+  flex: none;
+  min-height: 44px;
+}
+
+/* A linha que explica por que o check-in não mudou o bloco: o serviço vence a
+   presença marcada enquanto durar (2.2). */
+.onde-nota {
+  margin-top: var(--e2);
+  font-size: var(--t-13);
+  line-height: 1.35;
+  color: var(--texto-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.onde-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin-top: var(--e2);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--acao);
+  font: inherit;
+  font-size: var(--t-14);
+  font-weight: 600;
+  cursor: pointer;
+}
+.onde-link:hover {
+  text-decoration: underline;
+}
+
+/* A faixa dentro da folha de "Marcar por outra pessoa" não repete a moldura. */
+.onde-sheet {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+/* ==================================================================
+   2. A coluna do quadro (3.3)
+   ================================================================== */
+
+/* O quadro não usa .col-760: em 1440 sobrava um terço de tela vazio à direita,
+   que pela seção 3 da régua de crítica é buraco, não respiro. */
+.quadro {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: var(--e3);
+  /* O quadro mede a si mesmo: o ponto de quebra das duas colunas (seção 7) é
+     no próprio quadro, não na janela, porque no desktop a barra lateral de
+     240 px e o recuo de 32 px do #conteudo tiram 304 px da conta. Medido em
+     24/09/2026: em 1024 de janela o quadro tem 720 px e em 1440 tem 1136 px.
+     A 3.3 pede duas colunas nos dois, por isso a quebra é em 700 px de quadro,
+     que é a janela de 1004 px em diante com a barra lateral aberta. */
+  container-type: inline-size;
+  container-name: quadro;
+}
+/* base.css trava todo filho de #conteudo em 1040 px com o seletor de id; o
+   quadro pede 1200 (3.3) e repete o seletor para vencer, como as .col-* fazem. */
+#conteudo:not(.sem-margem) > .quadro {
+  max-width: 1200px;
+}
+.quadro .dia-resumo {
+  margin: 0 0 var(--e2);
+}
+.quadro .dia-resumo strong[data-tom="erro"] {
+  color: var(--erro);
+}
+.quadro > .feed-segmento {
+  margin: 6px 0 var(--e4);
+}
+.quadro > .amanha-linha {
+  margin-top: var(--e5);
+}
+
+/* ==================================================================
+   3. Os números grandes (3.4)
+   ================================================================== */
+
+/* Linha flexível, e não grade: com grade o quinto número (Atrasados, o único
+   que aparece só às vezes) sobrava sozinho numa linha de duas ou de quatro
+   colunas, com meia linha vazia ao lado. Vazio que se move sem prejuízo é
+   buraco, não respiro. No flex a última linha divide a largura entre quem
+   está nela, então nunca sobra coluna vazia: cinco cabem numa linha a partir
+   de 708 px, viram 2+2+1 no celular e o último ocupa a linha inteira. */
+.quadro-numeros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e3);
+}
+.quadro-numero {
+  position: relative;
+  flex: 1 1 132px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--e1);
+  min-height: 76px;
+  padding: var(--e4) var(--e3) var(--e3);
+  border: 1px solid var(--borda);
+  border-radius: var(--r-m);
+  background: var(--card);
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+}
+.quadro-numero::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 4px;
+  background: var(--quadro-cor, var(--borda-forte));
+}
+/* 40 px no celular e 48 no desktop: os dois degraus vêm da 3.2 e da 3.3 e não
+   existem na escala de css/tokens.css, que vai até 32. É o único desvio de
+   escala do lote, e é o número que a Monica lê de longe. */
+.quadro-numero-valor {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.quadro-numero-rotulo {
+  font-size: var(--t-12);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--texto-2);
+}
+.quadro-numero:hover {
+  border-color: var(--borda-forte);
+}
+.quadro-numero[aria-pressed="true"] {
+  border-color: var(--acao);
+  background: var(--oliva-suave);
+}
+/* "Sem aviso" é o único tracejado da tela, aqui e no cartão de pessoa. */
+.quadro-num-sem-aviso {
+  --quadro-cor: transparent;
+  border: 2px dashed var(--borda-forte);
+}
+.quadro-unidade {
+  margin: var(--e2) 0 var(--e5);
+  font-size: var(--t-13);
+  color: var(--texto-3);
+}
+
+/* ==================================================================
+   4. Grupos e cartões de pessoa (3.2 e 3.6)
+   ================================================================== */
+
+/* No celular tudo é uma coluna só, na ordem em que o HTML vem, que é a ordem
+   da 3.2: os grupos de cima (.quadro-grupos), o bloco "Sem aviso" com as
+   próximas horas (.quadro-lado) e "Folga" (.quadro-grupos-fim). A ordem de
+   leitura e a ordem visual são a mesma, sem order e sem display: contents.
+   No desktop (seção 7) os mesmos três blocos viram áreas de grade. */
+.quadro-corpo,
+.quadro-grupos,
+.quadro-lado {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e5);
+}
+
+.quadro-grupo-titulo {
+  display: flex;
+  align-items: baseline;
+  gap: var(--e2);
+  margin: 0 0 var(--e3);
+  font-size: var(--t-12);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--texto-2);
+}
+.quadro-grupo-qtd {
+  font-size: var(--t-13);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--texto-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.quadro-cartoes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--e3);
+}
+
+/* Quatro canais redundantes de estado (3.6): o grupo, o ícone, a cor da barra
+   e o estilo da borda. A informação sobrevive em preto e branco e de longe. */
+.quadro-pessoa {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--e2);
+  padding: var(--e3) var(--e3) var(--e3) var(--e4);
+  border: 1px solid var(--borda);
+  border-radius: var(--r-m);
+  background: var(--card);
+  overflow: hidden;
+}
+.quadro-pessoa-barra {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--quadro-cor, transparent);
+}
+/* O dourado nunca é texto: aqui ele é a barra de 4 px e o fundo suave, e o
+   texto por cima continua --texto (11,65:1 no fundo suave) ou --texto-2. */
+.quadro-pessoa[data-grupo="servico"] {
+  background: var(--st-em-andamento-suave);
+}
+.quadro-pessoa[data-grupo="folga"] {
+  background: var(--fundo-2);
+}
+.quadro-pessoa-sem-aviso {
+  border: 2px dashed var(--borda-forte);
+}
+/* "Com agenda, sem lugar": cartão comum, sem barra e sem tracejado, porque a
+   pessoa não é gente de cobrar e o único tracejado da tela é o "Sem aviso". */
+.quadro-pessoa-sem-lugar {
+  --quadro-cor: transparent;
+}
+.quadro-pessoa .avatar {
+  flex: none;
+}
+.quadro-pessoa-corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.quadro-pessoa-nome {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--e2);
+  font-size: var(--t-16);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--texto);
+  overflow: hidden;
+}
+/* "Caroline" com a tarja ao lado não cabe em 163 px: a tarja desce, o nome
+   fica com a linha inteira e só corta com reticência se ainda assim faltar
+   espaço. Nome quebrado no meio da palavra é o defeito que isto resolve. */
+.quadro-pessoa-nome-txt {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.quadro-pessoa-atraso {
+  flex: none;
+}
+/* O único vermelho da tela (3.4). */
+.quadro-pessoa-atraso {
+  font-size: var(--t-12);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--st-atrasado);
+}
+.quadro-pessoa-lugar {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: var(--t-14);
+  line-height: 1.3;
+  color: var(--texto-2);
+}
+.quadro-pessoa-lugar .icone {
+  flex: none;
+  margin-top: 1px;
+}
+/* Duas linhas, não reticência: "Não disse onde está" não cabe em uma linha de
+   163 px, e "Não disse ond..." não informa nada. O texto livre de "Outro
+   lugar" tem 40 caracteres e para nas mesmas duas linhas. */
+.quadro-pessoa-lugar > span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+.quadro-pessoa-fazendo {
+  font-size: var(--t-14);
+  line-height: 1.3;
+  color: var(--texto);
+}
+.quadro-pessoa-desde,
+.quadro-pessoa-prox {
+  font-size: var(--t-13);
+  line-height: 1.3;
+  color: var(--texto-3);
+  font-variant-numeric: tabular-nums;
+}
+.quadro-pessoa-prox {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Contraste medido em 24/09/2026: no tema escuro o --texto-3 sobre o
+   --st-em-andamento-suave dá 4,40:1 e reprova por pouco; o --texto-2 dá
+   6,87:1. No tema claro os dois passam (5,46 e 5,70), então a linha vale para
+   os dois temas e o cartão fica igual nos dois. Os valores de cor estão em
+   css/tokens.css, que é onde eles moram. */
+.quadro-pessoa[data-grupo="servico"] .quadro-pessoa-desde,
+.quadro-pessoa[data-grupo="servico"] .quadro-pessoa-prox {
+  color: var(--texto-2);
+}
+/* A 3.2 pede 36 px neste botão; alvo de toque é regra dura e vence a medida de
+   conforto, então ele fica em 44. */
+.quadro-pedir {
+  align-self: flex-start;
+  min-height: 44px;
+  margin-top: var(--e1);
+}
+
+/* ==================================================================
+   5. "Quem ainda não avisou" e as próximas horas (3.5 e 3.3)
+   ================================================================== */
+
+.quadro-semaviso-acoes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e2);
+  margin-top: var(--e3);
+}
+.quadro-semaviso-acoes .btn {
+  min-height: 48px;
+}
+.quadro-tudo-certo {
+  display: flex;
+  align-items: center;
+  gap: var(--e2);
+  margin: 0;
+  padding: var(--e4);
+  border: 2px dashed var(--borda-forte);
+  border-radius: var(--r-m);
+  font-size: var(--t-14);
+  color: var(--texto-2);
+}
+.quadro-tudo-certo .icone {
+  flex: none;
+  color: var(--ok);
+}
+
+.quadro-proximas-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--borda);
+  border-radius: var(--r-m);
+  background: var(--card);
+  overflow: hidden;
+}
+.quadro-proxima {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--e2) var(--e3);
+  border: 0;
+  border-bottom: 1px solid var(--borda);
+  background: none;
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.quadro-proximas-lista li:last-child .quadro-proxima {
+  border-bottom: 0;
+}
+.quadro-proxima:hover {
+  background: var(--fundo-2);
+}
+.quadro-proxima-hora {
+  flex: none;
+  font-size: var(--t-13);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.quadro-proxima-nome {
+  min-width: 0;
+  font-size: var(--t-14);
+  color: var(--texto-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ==================================================================
+   6. A linha do dia (3.2, item 4)
+   ================================================================== */
+
+.quadro-fita {
+  margin-top: var(--e5);
+}
+.quadro-fita-rolagem {
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid var(--borda);
+  border-radius: var(--r-m);
+  background: var(--card);
+  -webkit-overflow-scrolling: touch;
+}
+/* Onze intervalos de uma hora, das 08:00 às 19:00, desenhados por gradiente
+   para não encher a árvore de elementos vazios.
+
+   A 3.2 pede 72 px de altura fixa (96 no desktop). Com o dia real do seed a
+   fita precisa de cinco faixas, porque o serviço de dia todo ocupa uma delas
+   sozinho e três pares começam no mesmo horário: em 72 px os blocos se
+   cobririam. Então 72 px é o piso e a fita cresce 28 px por faixa. Bloco que
+   some é pior que fita alta. */
+.quadro-fita-trilho {
+  position: relative;
+  min-width: 720px;
+  height: calc(24px + (var(--quadro-faixas, 1) * 28px) + var(--e2));
+  min-height: 72px;
+  background-image: repeating-linear-gradient(to right, var(--borda), var(--borda) 1px, transparent 1px, transparent calc(100% / 11));
+}
+.quadro-fita-hora {
+  position: absolute;
+  top: 4px;
+  padding-left: 4px;
+  font-size: var(--t-12);
+  color: var(--texto-3);
+  font-variant-numeric: tabular-nums;
+}
+/* O bloco tem 26 px porque três faixas de 44 não caberiam na fita; ele é
+   atalho, e o mesmo serviço abre pelo cartão, pelas próximas horas e pelo
+   feed, todos com 44 px. */
+.quadro-bloco {
+  position: absolute;
+  top: calc(24px + (var(--quadro-faixa, 0) * 28px));
+  height: 26px;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  border: 0;
+  border-left: 3px solid var(--cor-setor, var(--borda-forte));
+  border-radius: var(--r-s);
+  background: var(--fundo-2);
+  color: var(--texto);
+  font: inherit;
+  font-size: var(--t-12);
+  cursor: pointer;
+  overflow: hidden;
+}
+.quadro-bloco:hover {
+  background: var(--fundo-3);
+}
+.quadro-bloco-texto {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.quadro-agora {
+  position: absolute;
+  top: 20px;
+  bottom: var(--e1);
+  width: 2px;
+  background: var(--acao);
+}
+.quadro-fita-nota {
+  margin: var(--e2) 0 0;
+  font-size: var(--t-13);
+  color: var(--texto-3);
+}
+
+/* ==================================================================
+   7. Desktop: o único ponto de quebra, em 900 px (3.3)
+   ================================================================== */
+
+/* As duas colunas medem o quadro (container query), o resto mede a janela
+   (media query): o valor é um só, 900 px, e é o único ponto de quebra. */
+@container quadro (min-width: 700px) {
+  /* Coluna da esquerda 1fr, coluna da direita 300 px fixos, medianiz de 24 px.
+     "Sem aviso" e as próximas horas ocupam a coluna da direita inteira; "Folga"
+     fica embaixo dos outros grupos, na esquerda, que é a ordem da 3.2.
+     Medido em 24/09/2026: em 1440 de janela a esquerda tem 812 px e a grade de
+     cartões dá 4 colunas; em 1024 a esquerda tem 396 px e dá 2 colunas, que é
+     o que cabe ao lado de uma coluna de 300 px. */
+  .quadro-corpo {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    grid-template-areas:
+      "grupos lado"
+      "fim lado";
+    gap: var(--e5);
+    align-items: start;
+  }
+  .quadro-grupos { grid-area: grupos; }
+  .quadro-grupos-fim { grid-area: fim; }
+  .quadro-lado { grid-area: lado; }
+  /* Sem a coluna da direita (filtro em "Em serviço", por exemplo) a grade volta
+     a uma coluna: 300 px reservados e vazios seriam buraco, pela seção 3 da
+     régua de crítica, e não respiro. */
+  .quadro-corpo:not(:has(.quadro-lado)) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "grupos"
+      "fim";
+  }
+  /* Sem grupos de cima (filtro em "Sem aviso", por exemplo) a linha de cima
+     some, para o lateral não nascer com uma linha vazia acima de "Folga". */
+  .quadro-corpo:not(:has(.quadro-grupos:not(.quadro-grupos-fim))) {
+    grid-template-areas: "fim lado";
+  }
+}
+
+@media (min-width: 900px) {
+  /* 180 px de mínimo: é mais do que os 163 px do cartão no celular, e é o que
+     faz caber 4 colunas nos 812 px da esquerda em 1440 (4 x 180 mais 3 x 12). */
+  .quadro-cartoes {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+  .quadro-numero-valor {
+    font-size: 48px;
+  }
+  .quadro-semaviso-acoes .btn {
+    width: 100%;
+  }
+  /* Os cinco botões da faixa numa linha só: 88 px de faixa no desktop. */
+  .onde-botoes {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .onde-botao {
+    flex-direction: row;
+    gap: var(--e2);
+    min-height: 48px;
+  }
+}

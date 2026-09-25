@@ -1,0 +1,577 @@
+/* Green Agenda, módulo estilo: css/base.css
+   Reset, tipografia (uma família só, mínimo 13 px, inputs 16 px), utilitários
+   (.visualmente-oculto, .mt, .linha-flex, .linha-entre, .mudo, .col-900 a
+   .col-texto), casca (#app, #faixa-estado, #cabecalho, #nav-lateral,
+   #conteudo, #nav-inferior, #camada-fab, #camada-painel, #camada-sheet,
+   #camada-modal, #toasts) e o layout responsivo das três faixas (até 719,
+   720 a 1023, 1024 ou mais; camada lateral a partir de 1200), conforme as
+   seções 3.2, 3.5 e 11.3 da ESPECIFICACAO.md.
+   Foco visível dourado, prefers-reduced-motion, área segura (safe-area).
+
+   Redesenho de 18/09/2026 (docs/redesign/DIRECAO.md, lote 2). O que mudou:
+   - a Playfair saiu do app inteiro, então nenhuma classe daqui pede
+     --fonte-titulo (o token ficou como apelido de --fonte-ui e sai quando o
+     último uso sair dos outros arquivos);
+   - a barra lateral abre em 240 px já a partir de 1024 px, com rótulo em todos
+     os itens: acabou a lateral de 64 px só com ícone (3.1);
+   - o conteúdo trava em 1040 px e fica centrado, com as classes .col-900,
+     .col-760, .col-560 e .col-texto para as telas que apertam mais (3.0);
+   - o FAB ganha espaço reservado embaixo da lista, para não cobrir o cartão. */
+
+/* ------------------------------------------------------------------
+   0. Fonte: Inter variável servida pela própria origem (vendor/fontes/)
+   ------------------------------------------------------------------
+   Desde 25/09/2026 a Inter não vem mais do Google Fonts: o app nativo
+   (Capacitor) e o modo offline não podem depender de fonts.gstatic.com, e o
+   preconnect saiu do index.html. São dois arquivos do pacote
+   @fontsource-variable/inter 5.3.0 (licença OFL em vendor/fontes/
+   LICENSE-Inter.txt), um por faixa de caracteres, com unicode-range para o
+   navegador só baixar o que a página usa: o latin cobre o português inteiro,
+   o latin-ext só entra se aparecer um caractere fora dele. Eixo de peso de
+   400 a 700, que é o que o app usa (400 e 600). Os algarismos continuam
+   proporcionais por padrão, então font-variant-numeric: tabular-nums segue
+   obrigatório em hora, data e contador (ver css/tokens.css). */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("../vendor/fontes/inter-latin-wght-normal.woff2") format("woff2-variations"),
+       url("../vendor/fontes/inter-latin-wght-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("../vendor/fontes/inter-latin-ext-wght-normal.woff2") format("woff2-variations"),
+       url("../vendor/fontes/inter-latin-ext-wght-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ------------------------------------------------------------------
+   1. Reset
+   ------------------------------------------------------------------ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  height: 100%;
+  background: var(--fundo);
+  color-scheme: light;
+}
+:root[data-tema="escuro"] { color-scheme: dark; }
+
+body {
+  height: 100%;
+  font-family: var(--fonte-ui);
+  /* 16 px no celular (é o corpo de campo da escala, e evita o zoom automático
+     do iOS ao focar um input), 14 px no desktop, no bloco da faixa 6. */
+  font-size: var(--t-16);
+  line-height: 1.35;
+  color: var(--texto);
+  background: var(--fundo);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+[hidden] { display: none !important; }
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+button {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+  text-align: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+button:disabled { cursor: default; }
+a { color: var(--acao); text-decoration: none; }
+a:hover { text-decoration: underline; }
+img, svg, canvas, video { display: block; max-width: 100%; }
+svg.icone { flex: none; }
+ul, ol { list-style: none; }
+h1, h2, h3, h4 { font-weight: 600; line-height: 1.2; }
+p { overflow-wrap: anywhere; }
+strong, b { font-weight: 600; }
+small { font-size: var(--t-13); }
+hr { border: 0; border-top: 1px solid var(--borda); margin: var(--e4) 0; }
+input[type="time"], input[type="date"], input[type="number"] {
+  font-variant-numeric: tabular-nums;
+}
+::selection { background: var(--dourado-suave); color: var(--oliva-escuro); }
+
+/* Barra de rolagem discreta nas listas internas */
+* { scrollbar-width: thin; scrollbar-color: var(--borda-forte) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: var(--borda-forte); border-radius: var(--r-pill); }
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* Foco visível (12) */
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Movimento reduzido (11.3) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ------------------------------------------------------------------
+   2. Tipografia (11.2)
+   ------------------------------------------------------------------ */
+.titulo-tela {
+  font-weight: 600;
+  font-size: var(--t-28);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--texto);
+}
+.subtitulo-tela {
+  font-size: var(--t-14);
+  color: var(--texto-2);
+  margin-top: var(--e1);
+}
+.num-grande {
+  font-weight: 600;
+  font-size: var(--t-32);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.num, .hora, .placa, .tabular { font-variant-numeric: tabular-nums; }
+.placa { text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* ------------------------------------------------------------------
+   3. Utilitários
+   ------------------------------------------------------------------ */
+.visualmente-oculto {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.linha-flex { display: flex; align-items: center; gap: var(--e3); }
+.linha-entre { display: flex; align-items: center; justify-content: space-between; gap: var(--e3); }
+.linha-topo { display: flex; align-items: flex-start; gap: var(--e3); }
+.coluna { display: flex; flex-direction: column; }
+.cresce { flex: 1; min-width: 0; }
+.mudo { color: var(--texto-2); font-size: var(--t-14); }
+.pequeno { font-size: var(--t-13); }
+.forte { font-weight: 600; }
+.centro { text-align: center; }
+.direita { text-align: right; }
+.truncar { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.quebra { white-space: normal; overflow-wrap: anywhere; }
+.riscado { text-decoration: line-through; }
+.mt1 { margin-top: var(--e1); } .mt2 { margin-top: var(--e2); } .mt3 { margin-top: var(--e3); }
+.mt4 { margin-top: var(--e4); } .mt5 { margin-top: var(--e5); } .mt6 { margin-top: var(--e6); }
+.mb1 { margin-bottom: var(--e1); } .mb2 { margin-bottom: var(--e2); } .mb3 { margin-bottom: var(--e3); }
+.mb4 { margin-bottom: var(--e4); } .mb5 { margin-bottom: var(--e5); } .mb6 { margin-bottom: var(--e6); }
+.cor-ok { color: var(--ok); } .cor-alerta { color: var(--alerta); } .cor-erro { color: var(--erro); } .cor-info { color: var(--info); }
+/* Larguras máximas de conteúdo (DIRECAO.md, 3.0), centradas: o vazio dos dois
+   lados é simétrico, e por isso é respiro e não buraco. 900 para tela de
+   configuração, 760 para o par calendário mais horários, 560 para coluna de
+   campos, 540 para texto corrido (60 a 70 caracteres em 14 px). */
+.col-900, .col-760, .col-560, .col-texto { width: 100%; margin-left: auto; margin-right: auto; }
+.col-900 { max-width: 900px; }
+.col-760 { max-width: 760px; }
+.col-560 { max-width: 560px; }
+.col-texto { max-width: 540px; }
+.girando { animation: girar 1s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
+
+/* ------------------------------------------------------------------
+   4. Casca: celular (até 719 px), base para as outras faixas
+   ------------------------------------------------------------------ */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  min-height: 100vh;
+  position: relative;
+  background: var(--fundo);
+}
+
+/* Faixa de estado (9.11), acima do cabeçalho */
+#faixa-estado { flex: none; z-index: 31; }
+#faixa-estado:empty { display: none; }
+
+/* Cabeçalho */
+#cabecalho {
+  flex: none;
+  position: relative;
+  z-index: 30;
+  background: var(--fundo);
+  padding-top: var(--seg-topo);
+}
+#cabecalho:empty { display: none; }
+
+/* Conteúdo: é o único que rola na vertical */
+#conteudo {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding: 0 var(--e4) calc(var(--alt-nav) + var(--seg-base) + var(--e6));
+  position: relative;
+  outline: none;
+}
+#conteudo.sem-margem { padding-left: 0; padding-right: 0; }
+#conteudo.sem-margem-base, #conteudo.grade-cheia { padding-bottom: 0; }
+#conteudo:has(> .rodape-form), #conteudo:has(> .rodape-acoes),
+#conteudo:has(.rodape-form), #conteudo:has(.rodape-acoes) {
+  padding-bottom: calc(var(--alt-nav) + var(--seg-base) + 104px);
+}
+/* Espaço reservado para o FAB (3.1): 56 px de botão mais 16 de folga, para ele
+   nunca cobrir o chip de estado do último cartão da lista. Vem antes das regras
+   de rodapé fixo de propósito: quando há rodapé o FAB não existe, porque
+   prepararConteudo() o esconde a cada troca de tela. */
+#app:has(#camada-fab:not(:empty)) #conteudo { padding-bottom: calc(var(--alt-nav) + var(--seg-base) + 88px); }
+#app:has(#nav-inferior[hidden]) #conteudo { padding-bottom: var(--e6); }
+#app:has(#nav-inferior[hidden]):has(#camada-fab:not(:empty)) #conteudo { padding-bottom: calc(var(--seg-base) + 88px); }
+#app:has(#nav-inferior[hidden]) #conteudo:has(.rodape-form),
+#app:has(#nav-inferior[hidden]) #conteudo:has(.rodape-acoes) {
+  padding-bottom: calc(var(--seg-base) + 104px);
+}
+/* Celular: o rodapé do formulário quebra em duas linhas (resumo em cima,
+   botões embaixo) e fica mais alto; o conteúdo e o toast sobem junto. */
+@media (max-width: 599px) {
+  #conteudo:has(.rodape-form) { padding-bottom: calc(var(--alt-nav) + var(--seg-base) + 136px); }
+  #app:has(#nav-inferior[hidden]) #conteudo:has(.rodape-form) { padding-bottom: calc(var(--seg-base) + 136px); }
+}
+
+/* Navegação inferior (3.2) */
+#nav-inferior {
+  flex: none;
+  position: relative;
+  z-index: 30;
+  display: flex;
+  align-items: stretch;
+  min-height: calc(var(--alt-nav) + var(--seg-base));
+  padding: 0 var(--e2) var(--seg-base);
+  background: var(--card);
+  border-top: 1px solid var(--borda);
+}
+#nav-inferior .nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: var(--alt-nav);
+  color: var(--texto-2);
+  font-size: var(--t-13);
+  font-weight: 600;
+  position: relative;
+  border-radius: var(--r-s);
+  transition: color var(--transicao);
+}
+#nav-inferior .nav-item .icone { transition: transform var(--transicao); }
+/* Quatro destinos em 375 px: o rótulo nunca quebra em duas linhas. */
+#nav-inferior .nav-item .nav-rotulo {
+  max-width: 100%;
+  padding: 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#nav-inferior .nav-item[aria-current="page"] { color: var(--acao); }
+#nav-inferior .nav-item[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 50%;
+  width: 24px; height: 2px;
+  transform: translateX(-50%);
+  background: var(--acao);
+  border-radius: 0 0 2px 2px;
+}
+#nav-inferior .nav-item:active .icone { transform: scale(0.92); }
+#nav-inferior .nav-item .badge {
+  position: absolute;
+  top: 6px;
+  left: calc(50% + 4px);
+}
+
+/* Barra lateral (desktop), escondida por padrão */
+#nav-lateral { display: none; }
+
+/* FAB */
+#camada-fab {
+  position: fixed;
+  right: var(--e4);
+  bottom: calc(var(--alt-nav) + var(--seg-base) + var(--e4));
+  z-index: 25;
+}
+#camada-fab:empty { display: none; }
+#app:has(#nav-inferior[hidden]) #camada-fab { bottom: calc(var(--seg-base) + var(--e4)); }
+
+/* Camada de detalhe (só o desktop a partir de 1200 px a usa) */
+#camada-painel {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: min(var(--larg-painel), 100vw);
+  z-index: 60;
+  background: var(--card);
+  box-shadow: var(--sombra-3);
+  border-left: 1px solid var(--borda);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: painelEntra 220ms cubic-bezier(0.32, 0.72, 0.28, 1);
+}
+@keyframes painelEntra { from { transform: translateX(24px); opacity: 0; } }
+#camada-painel .painel-lateral,
+#camada-painel > .painel-corpo {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 var(--e5) var(--e5);
+  position: relative;
+}
+#camada-painel #cabecalho-painel,
+#camada-painel .cab-tela { position: sticky; top: 0; z-index: 3; background: var(--card); }
+
+/* Sheets, modais e toasts vivem fora do #app */
+#camada-sheet { position: fixed; inset: 0; z-index: 80; }
+#camada-modal { position: fixed; inset: 0; z-index: 90; }
+#toasts {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--alt-nav) + var(--seg-base) + var(--e4));
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: var(--e2);
+  width: min(420px, calc(100% - 32px));
+  pointer-events: none;
+}
+#toasts > * { pointer-events: auto; }
+#app:has(#nav-inferior[hidden]) ~ #toasts { bottom: calc(var(--seg-base) + var(--e4)); }
+/* Com rodapé fixo (formulário ou detalhe), o toast sobe para não cobrir o botão primário */
+#app:has(#conteudo .rodape-form) ~ #toasts, #app:has(#conteudo .rodape-acoes) ~ #toasts,
+#app:has(#conteudo .registrar-rodape) ~ #toasts { bottom: calc(var(--alt-nav) + var(--seg-base) + 88px); }
+#app:has(#nav-inferior[hidden]):has(#conteudo .rodape-form) ~ #toasts,
+#app:has(#nav-inferior[hidden]):has(#conteudo .rodape-acoes) ~ #toasts,
+#app:has(#nav-inferior[hidden]):has(#conteudo .registrar-rodape) ~ #toasts { bottom: calc(var(--seg-base) + 88px); }
+/* Celular: o rodapé do Registrar empilha o link "Mais opções" (44), a linha de resumo (18) e o botão (48),
+   cerca de 160 px com os recuos (medido em 375 px, 23/09/2026); o toast sobe para cima dele inteiro. */
+@media (max-width: 719px) {
+  #app:has(#conteudo .registrar-rodape) ~ #toasts { bottom: calc(var(--alt-nav) + var(--seg-base) + 176px); }
+  #app:has(#nav-inferior[hidden]):has(#conteudo .registrar-rodape) ~ #toasts { bottom: calc(var(--seg-base) + 176px); }
+}
+/* Celular: o rodapé do formulário tem duas linhas, o toast sobe mais. */
+@media (max-width: 599px) {
+  #app:has(#conteudo .rodape-form) ~ #toasts { bottom: calc(var(--alt-nav) + var(--seg-base) + 120px); }
+  #app:has(#nav-inferior[hidden]):has(#conteudo .rodape-form) ~ #toasts { bottom: calc(var(--seg-base) + 120px); }
+}
+/* Com sheet aberta no celular e tablet, a folha cobre a barra inferior; o toast
+   sobe para cima do .sheet-rodape (12 + 48 + 16 = 76px) e não cobre os botões
+   nem o item seguinte do checklist. A cadeia de irmãos garante especificidade
+   maior que as regras de rodapé acima. No desktop a sheet vira diálogo central
+   e a posição padrão serve. */
+@media (max-width: 1023px) {
+  #app ~ #camada-painel ~ #camada-sheet:not([hidden]) ~ #toasts { bottom: calc(var(--seg-base) + 96px); }
+}
+
+/* Área segura do aparelho (app nativo e PWA com viewport-fit=cover). O topo e
+   a base já entram por --seg-topo e --seg-base em cada peça fixa (cabeçalho,
+   barra inferior, FAB, rodapés, sheet, toasts e login). Aqui entram só os
+   dois casos que faltavam: a faixa de estado, que fica acima do cabeçalho e
+   já tem o recuo do topo em .faixa-estado, então o cabeçalho não repete; e as
+   laterais, que só existem em paisagem no iPhone com recorte. */
+#faixa-estado:not(:empty) + #cabecalho { padding-top: 0; }
+#nav-inferior { padding-left: calc(var(--e2) + var(--seg-esq)); padding-right: calc(var(--e2) + var(--seg-dir)); }
+#cabecalho { padding-left: var(--seg-esq); padding-right: var(--seg-dir); }
+#conteudo { padding-left: calc(var(--e4) + var(--seg-esq)); padding-right: calc(var(--e4) + var(--seg-dir)); }
+#camada-fab { right: calc(var(--e4) + var(--seg-dir)); }
+.rodape-form, .rodape-acoes, .registrar-rodape { padding-left: calc(var(--e4) + var(--seg-esq)); padding-right: calc(var(--e4) + var(--seg-dir)); }
+
+/* ------------------------------------------------------------------
+   5. Tablet (720 a 1023 px): uma coluna larga, barra inferior
+   ------------------------------------------------------------------ */
+@media (min-width: 720px) {
+  #conteudo { padding-left: var(--e5); padding-right: var(--e5); }
+  #conteudo.sem-margem { padding-left: 0; padding-right: 0; }
+  #camada-fab { right: var(--e5); }
+  /* Uma coluna larga travada em 680 px e centrada (3.0). O bloco do desktop,
+     mais abaixo, troca a trava por 1040 px. */
+  #conteudo:not(.sem-margem) > * { max-width: 680px; margin-left: auto; margin-right: auto; }
+  #conteudo:not(.sem-margem) > .col-560 { max-width: 560px; }
+  #conteudo:not(.sem-margem) > .col-texto { max-width: 540px; }
+}
+
+/* ------------------------------------------------------------------
+   6. Desktop (1024 px ou mais): barra lateral, conteúdo ocupa o resto
+   ------------------------------------------------------------------ */
+@media (min-width: 1024px) {
+  body { font-size: var(--t-14); }
+
+  #app {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    height: 100dvh;
+  }
+  #nav-lateral { grid-column: 1; grid-row: 1 / -1; }
+  #faixa-estado { grid-column: 2; grid-row: 1; }
+  #cabecalho { grid-column: 2; grid-row: 2; }
+  #conteudo { grid-column: 2; grid-row: 3; }
+  #nav-inferior { display: none !important; }
+
+  #conteudo {
+    padding: 0 var(--e6) var(--e6);
+    scrollbar-gutter: stable;
+  }
+  #conteudo:has(.rodape-form), #conteudo:has(.rodape-acoes) { padding-bottom: 112px; }
+  #conteudo.sem-margem { padding-left: 0; padding-right: 0; }
+  /* Conteúdo travado em 1040 px e centrado (3.0). As classes de coluna apertam
+     mais, e repetem o seletor com o id para vencer a regra geral acima. */
+  #conteudo:not(.sem-margem) > * { max-width: 1040px; margin-left: auto; margin-right: auto; }
+  #conteudo:not(.sem-margem) > .col-900 { max-width: 900px; }
+  #conteudo:not(.sem-margem) > .col-760 { max-width: 760px; }
+  #conteudo:not(.sem-margem) > .col-560 { max-width: 560px; }
+  #conteudo:not(.sem-margem) > .col-texto { max-width: 540px; }
+
+  /* Barra lateral de 240 px, aberta com rótulo em todos os itens (3.1) */
+  #nav-lateral {
+    display: flex;
+    flex-direction: column;
+    width: var(--larg-lateral);
+    height: 100%;
+    background: var(--card);
+    border-right: 1px solid var(--borda);
+    padding: calc(var(--seg-topo) + var(--e3)) var(--e3) var(--e3);
+    gap: 2px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 35;
+  }
+  #nav-lateral .nav-topo {
+    display: flex;
+    align-items: center;
+    padding: var(--e2) var(--e3) var(--e5);
+  }
+  #nav-lateral .nav-topo .logo-pequeno { width: 48px; }
+  #nav-lateral .nav-grupo { display: flex; flex-direction: column; gap: 2px; }
+  #nav-lateral .nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--e3);
+    min-height: 44px;
+    padding: 0 var(--e3);
+    border-radius: var(--r-s);
+    color: var(--texto-2);
+    font-size: var(--t-14);
+    font-weight: 600;
+    position: relative;
+    white-space: nowrap;
+    transition: background var(--transicao), color var(--transicao);
+  }
+  #nav-lateral .nav-item .icone { flex: none; }
+  #nav-lateral .nav-item:hover { background: var(--fundo-2); color: var(--texto); }
+  #nav-lateral .nav-item[aria-current="page"] { background: var(--oliva-suave); color: var(--acao); }
+  /* No escuro, --acao sobre --oliva-suave dá 4,25:1; o item ativo usa o texto cheio. */
+  :root[data-tema="escuro"] #nav-lateral .nav-item[aria-current="page"],
+  :root[data-tema="escuro"] #nav-lateral .nav-rodape .nav-item[aria-current="page"] .nav-usuario { color: var(--texto); }
+  #nav-lateral .nav-item .nav-rotulo {
+    display: inline;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #nav-lateral .nav-item .badge { margin-left: auto; }
+  #nav-lateral .nav-separador { height: 1px; background: var(--borda); margin: var(--e3) var(--e3); }
+  #nav-lateral .nav-novo { margin-bottom: var(--e4); }
+  /* A direção pede 40 px no botão e nos itens; ficam em 44 px porque o alvo de
+     toque mínimo do projeto é 44 e a mesma barra aparece em laptop com tela
+     sensível ao toque. */
+  #nav-lateral .nav-novo .btn {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 var(--e3);
+    justify-content: flex-start;
+    gap: var(--e2);
+  }
+  #nav-lateral .nav-rodape {
+    margin-top: auto;
+    padding-top: var(--e3);
+    border-top: 1px solid var(--borda);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--e1);
+    font-size: var(--t-13);
+    color: var(--texto-2);
+  }
+  #nav-lateral .nav-rodape .nav-usuario {
+    font-weight: 600;
+    color: var(--texto);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #nav-lateral .nav-rodape .nav-item[aria-current="page"] .nav-usuario { color: var(--acao); }
+  #nav-lateral .nav-conexao { display: flex; align-items: center; gap: var(--e2); padding: 0 var(--e3) var(--e1); }
+
+  #camada-fab { right: var(--e6); bottom: var(--e6); }
+  #toasts {
+    left: auto;
+    right: var(--e6);
+    bottom: var(--e6);
+    transform: none;
+    width: min(420px, calc(100vw - 64px));
+  }
+  #app:has(#conteudo .rodape-form) ~ #toasts, #app:has(#conteudo .rodape-acoes) ~ #toasts,
+  #app:has(#conteudo .registrar-rodape) ~ #toasts,
+  #app:has(#nav-inferior[hidden]):has(#conteudo .rodape-form) ~ #toasts,
+  #app:has(#nav-inferior[hidden]):has(#conteudo .rodape-acoes) ~ #toasts,
+  #app:has(#nav-inferior[hidden]):has(#conteudo .registrar-rodape) ~ #toasts { bottom: 104px; }
+  /* Painel de detalhe aberto: o toast (com Desfazer) sai de cima da barra de acoes do
+     painel e do botao Mais acoes, ficando a esquerda do painel. */
+  #camada-painel:not([hidden]) ~ #toasts { right: calc(var(--larg-painel) + var(--e6)); }
+}
+
+/* ------------------------------------------------------------------
+   7. Camada de detalhe a partir de 1200 px (3.5)
+   ------------------------------------------------------------------ */
+@media (min-width: 1200px) {
+  #camada-painel { width: var(--larg-painel); }
+}
+
+/* A faixa de 1280 px não existe mais para a barra lateral: ela já abre em
+   240 px a partir de 1024 px (DIRECAO.md, 3.0 e 3.1). */
+
+/* Impressão: só o conteúdo */
+@media print {
+  #nav-inferior, #nav-lateral, #camada-fab, #toasts, #faixa-estado { display: none !important; }
+  #app { display: block; height: auto; }
+  #conteudo { overflow: visible; padding: 0; }
+}

@@ -1,0 +1,229 @@
+/* Green Agenda, módulo estilo: css/listas.css
+   Tela "Serviços agendados" (docs/redesign/DIRECAO.md, seção 3.2): abas de
+   sublinhado, busca, agrupamento por data com cabeçalho por grupo, a linha de
+   serviço de 72 px no desktop e 88 px no celular, o detalhe que expande na
+   própria linha e o grupo "Precisa de decisão".
+
+   Dono: lote 4 (css/listas.css e src/agenda.js). Além da tela nova, este
+   arquivo guarda o acabamento que o lote 4 precisou nas telas que ele mexeu e
+   que não podia escrever no arquivo de outro lote:
+   - o seletor de visão e os botões com contador do cabeçalho do Calendário
+     (a base .botao-contador é do lote 2, em css/componentes.css);
+   - a linha de resumo do Meu dia (3.7), que substituiu o bloco de contadores
+     em número grande.
+
+   Regras de convivência:
+   - classe nova desta tela nasce aqui, não em css/componentes.css;
+   - nenhuma cor hexadecimal fora de css/tokens.css, sempre var(--token);
+   - a escala é a da seção 1.2 (--t-12 a --t-32), no máximo cinco tamanhos na
+     mesma tela;
+   - todo número de tempo com font-variant-numeric: tabular-nums, porque os
+     algarismos da Inter são proporcionais por padrão;
+   - alvo de toque de 44 px ou mais, nos dois temas, em 375 px e em 1440 px.
+
+   Esta folha é carregada depois de css/telas.css, então vence o empate de
+   especificidade com as folhas herdadas. Não precise de !important. */
+
+/* ==================================================================
+   1. Cabeçalho: seletor de visão e botões com contador
+   ================================================================== */
+
+/* O rótulo de "Filtros" e de "Avisos" some no celular: o ícone mais o número
+   dizem a mesma coisa e devolvem a faixa de 56 px para o título. O seletor de
+   visão mantém o rótulo, porque "Dia" e "Semana" não têm ícone próprio. */
+@media (max-width: 719px) {
+  .botao-contador-rotulo { display: none; }
+  .botao-contador { padding: 0 var(--e2); }
+}
+
+.seletor-visao { gap: 6px; }
+.seletor-visao-rotulo { font-size: var(--t-14); font-weight: 600; }
+.seletor-visao .icone:last-child { color: var(--texto-2); }
+
+/* A faixa das abas encosta no fim do cabeçalho: o fio de 1 px delas é o que
+   separa o topo do conteúdo, então não pode sobrar respiro embaixo. */
+.cab-linha-abas { padding-bottom: 0; }
+
+/* Exportar CSV vira um alvo de 44 px só com ícone no celular. */
+@media (max-width: 719px) {
+  .servicos-exportar { min-height: 44px; width: 44px; padding: 0; }
+  .servicos-exportar span { display: none; }
+}
+
+/* ==================================================================
+   2. Tela Serviços agendados
+   ================================================================== */
+
+.tela-servicos { padding-top: var(--e3); }
+.servicos-busca { margin-bottom: var(--e2); }
+.servicos-busca .entrada { min-height: 44px; }
+
+/* Aba Período: os dois campos de data lado a lado, sem passar da medida de
+   leitura, com "às" implícito no rótulo de cada um. */
+.servicos-periodo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e3);
+  margin-bottom: var(--e2);
+}
+.servicos-periodo .campo { flex: 1 1 160px; max-width: 220px; margin-bottom: 0; }
+.servicos-periodo .entrada { font-variant-numeric: tabular-nums; }
+/* Celular: De e Até lado a lado. Empilhados gastavam 158 px antes da lista. */
+@media (max-width: 719px) {
+  .servicos-periodo { flex-wrap: nowrap; gap: var(--e2); }
+  .servicos-periodo .campo { flex: 1 1 0; min-width: 0; max-width: none; }
+  .servicos-periodo .entrada { padding-left: var(--e2); padding-right: var(--e1); min-width: 0; }
+}
+
+.servicos-recorte { margin-bottom: var(--e2); }
+
+/* O grupo de um dia: as linhas sobre --card, separadas por fio, dentro de uma
+   moldura de 1 px com raio. Sem cartão individual e sem sombra (3.2). */
+.servicos-lista {
+  background: var(--card);
+  border: 1px solid var(--borda);
+  border-radius: var(--r-m);
+  overflow: hidden;
+}
+.servicos-lista > .linha-servico:last-child,
+.servicos-lista > .linha-servico-expandida:last-child { border-bottom: 0; }
+
+/* Cabeçalho do grupo "Precisa de decisão": a mesma tipografia dos dias, com a
+   marca dourada de decisão à esquerda. O dourado aparece em fio, nunca em
+   área grande. */
+.grupo-data-decisao { padding-left: var(--e3); position: relative; }
+.grupo-data-decisao::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 2px;
+  bottom: 2px;
+  width: 3px;
+  border-radius: var(--r-pill);
+  background: var(--dourado);
+}
+
+/* ==================================================================
+   3. Linha de serviço: partes que nascem nesta tela
+   ================================================================== */
+
+/* O corpo da linha é um botão: tocar no nome abre o painel lateral de 420 px,
+   que continua sendo a melhor tela do app. */
+button.linha-servico-corpo {
+  display: block;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  min-height: 44px;
+}
+button.linha-servico-corpo:hover .linha-servico-cliente { text-decoration: underline; }
+.linha-servico-hora { font-variant-numeric: tabular-nums; }
+
+/* O motivo da decisão ("Pendente de 15/09", "Liberação pendente") abre a linha
+   de baixo em peso 600: é a informação que decide o que fazer. */
+.linha-servico-motivo { font-weight: 600; color: var(--texto); }
+.linha-servico[data-decisao] .linha-servico-motivo { color: var(--alerta); }
+.linha-servico-quem { overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+.linha-servico-recurso .inicial { font-size: var(--t-12); }
+
+/* Detalhe expandido: endereço copiável, telefone e as ações. */
+.linha-servico-endereco {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--e2);
+  min-height: 44px;
+  padding: var(--e1) 0;
+  font-size: var(--t-14);
+  line-height: 1.45;
+  text-align: left;
+  color: var(--texto);
+  cursor: pointer;
+  max-width: 540px;
+}
+.linha-servico-endereco:hover { text-decoration: underline; }
+.linha-servico-endereco .icone { flex: none; color: var(--texto-2); margin-top: 2px; }
+.linha-servico-tel {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--t-14);
+  font-weight: 600;
+  color: var(--texto);
+  font-variant-numeric: tabular-nums;
+  margin-right: var(--e2);
+}
+.linha-servico-expandida-acoes { align-items: center; }
+.linha-servico-expandida-texto strong { color: var(--texto); font-weight: 600; }
+.linha-servico-expandida-checklist { max-width: 540px; }
+.linha-servico-expandida-checklist .checklist { margin-top: var(--e2); }
+
+/* ==================================================================
+   4. Meu dia: a linha de resumo no lugar dos contadores (3.7)
+   ================================================================== */
+
+.dia-resumo {
+  margin: 0 0 var(--e4);
+  font-size: var(--t-14);
+  line-height: 1.45;
+  color: var(--texto-2);
+  max-width: 540px;
+}
+.dia-resumo strong { color: var(--texto); font-weight: 600; font-variant-numeric: tabular-nums; }
+.dia-resumo strong[data-tom="ok"] { color: var(--ok); }
+.dia-resumo strong[data-tom="alerta"] { color: var(--alerta); }
+.dia-resumo strong[data-tom="andamento"] { color: var(--alerta); }
+
+/* ==================================================================
+   5. Desktop
+   ================================================================== */
+
+@media (min-width: 1024px) {
+  /* A lista respira o mesmo tanto que o cabeçalho: 1040 px, centrada, com a
+     busca travada na medida de leitura para não virar uma régua de 1040 px. */
+  .servicos-busca { max-width: 540px; }
+  .tela-servicos { padding-top: var(--e4); }
+  .linha-servico-quem { max-width: 220px; }
+}
+
+/* ==================================================================
+   6. Celular: a linha em duas faixas e 88 px (3.2)
+   ================================================================== */
+
+/* Hora, cliente e o botão de detalhe (só o ícone, 44 px de toque) na primeira
+   faixa; carro, equipe e estado na segunda. As ações de decisão, quando
+   existem, descem para uma terceira faixa, e só nessas linhas. */
+@media (max-width: 719px) {
+  .servicos-lista .linha-servico { row-gap: var(--e1); }
+  .servicos-lista .linha-servico-corpo { flex: 1 1 calc(100% - 160px); }
+  .servicos-lista .linha-servico > .btn[data-acao="detalhes"] {
+    order: 2;
+    margin-left: 0;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    justify-content: center;
+    border-color: transparent;
+    background: none;
+  }
+  .servicos-lista .linha-servico > .btn[data-acao="detalhes"] > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .servicos-lista .linha-servico-recurso,
+  .servicos-lista .linha-servico-estado { order: 3; min-height: 24px; }
+  .servicos-lista .linha-servico > .btn:not([data-acao="detalhes"]) { order: 4; margin-left: 0; }
+  .servicos-lista .linha-servico-quem { max-width: 120px; }
+}
+
+/* Nota interna editável dentro da linha expandida (DIRECAO 3.2 e 4.11). */
+.linha-servico-nota { max-width: 540px; }
+.linha-servico-nota .areatexto { min-height: 0; }
+.linha-servico-nota .linha-servico-expandida-acoes { margin-top: var(--e2); }

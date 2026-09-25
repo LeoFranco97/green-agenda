@@ -1,0 +1,225 @@
+/* Green Agenda, módulo estilo: css/tokens.css
+   Tokens do Manual de Marca do Grupo Green, com os NOMES EXATOS da seção 11.1
+   da ESPECIFICACAO.md (cores, tipografia, escala, espaços, raios, sombras,
+   medidas), o bloco do tema escuro em :root[data-tema="escuro"] e o bloco de
+   densidade compacta em :root[data-densidade="compacta"].
+   Regra: nenhuma cor hex existe fora deste arquivo. Sem preto puro.
+
+   Redesenho de 18/09/2026 (docs/redesign/DIRECAO.md, lote 1). O que mudou:
+   - família única Inter, variável de 400 a 700, e a Playfair fora do app
+     inteiro, inclusive do login (decisão final do diretor, que substitui a
+     Source Sans 3 proposta na seção 1 da DIRECAO.md);
+   - escala de dez degraus para sete, com apelidos de compatibilidade;
+   - dois degraus de borda com papel separado, fio e contorno;
+   - sombra quase zero, porque a separação passa a vir de borda e superfície.
+
+   CONTRASTE MEDIDO (WCAG 2.1, valores calculados em 18/09/2026).
+   Texto, mínimo 4,5:1. Contorno e marca que carrega informação, mínimo 3:1.
+
+   Tema claro, sobre --card #ffffff / --fundo #f7f3ee / --fundo-2 #efe7de /
+   --oliva-suave #e8ebe2:
+     --texto     14,26 / 12,91 / 11,65 / 11,83
+     --texto-2    6,42 /  5,81 /  5,24 /  5,33
+     --texto-3    6,16 /  5,58 /  5,03 /  5,11  (era #6b6f62, que dava 4,21 no
+                  --fundo-2 e reprovava; por isso virou #5f6357)
+     --acao      10,16 /  9,20 /  8,30 /  8,43
+     --borda-forte 3,71 / 3,36 /  3,03 /  3,07  (contorno de controle, passa)
+     --borda       1,41 / 1,28 /  1,15 /  1,17  (fio decorativo, não carrega
+                  informação, então 3:1 não se aplica)
+   Setores no claro, sobre --card / --fundo (a marca de setor carrega
+   informação, então vale 3:1):
+     mov 10,16/9,20   ent 4,91/4,45   dec 3,98/3,60   flo 4,18/3,79
+     pai 4,55/4,11    cor 4,53/4,10   pos 5,20/4,71   com 3,67/3,32
+     fin 3,97/3,60
+   (flo, com e fin escureceram nesta passada: os valores antigos davam 3,67,
+   2,63 e 3,39 no cartão, e os dois primeiros reprovavam.)
+
+   Tema escuro, sobre --card #242d21 / --fundo #1c231a / --fundo-2 #2c3628:
+     --borda-forte #78806f  3,47 / 3,92 / 3,07  (passa)
+     --borda       #404d3c  1,59 / 1,80 / 1,41  (fio decorativo)
+     --texto-3     #9a9d90  5,16 / 5,82 / 4,56
+   Setores no escuro: os nove valores do claro reprovam ali (mov 1,40, ent
+   2,90, pos 2,74 abaixo de 3:1 no cartão, e todos abaixo de 4,5:1 contra o
+   --texto-inverso escuro que o avatar usa por cima). Por isso os nove ganham
+   valor próprio no bloco escuro, na mesma matiz, todos entre 4,08 e 4,14 no
+   cartão e entre 4,60 e 4,67 contra o texto do avatar.
+
+   Ainda no escuro, as cores que o .chip-status usa como texto reprovavam desde
+   antes deste redesenho (--st-confirmado dava 1,40:1, ou seja, texto
+   invisível). Ganharam valor próprio no bloco escuro: --ok, --erro, --info,
+   --st-confirmado, --st-concluido, --st-a-caminho, --st-nao-realizado e
+   --st-atrasado. Nada muda no tema claro.
+
+   --carro-1 a --carro-5 são fundo com --texto-inverso por cima e têm 4,5:1 ou
+   mais nos dois temas (valor próprio no escuro). --texto-3, --alerta,
+   --st-aguardando, --st-reagendado e --st-cancelado também têm valor próprio
+   no escuro.
+   Tokens extras (fora da 11.1, criados aqui para manter a regra da cor):
+   --veu (fundo das sobreposições), --toast-fundo, --toast-texto,
+   --toast-acao, --hachura (listra das áreas fechadas), --seta-selecao
+   (SVG da seta do .selecao como data URI). */
+
+:root {
+  /* Marca */
+  --oliva: #3a452b;            --oliva-escuro: #242d21;
+  --nude: #d3b9a4;             --dourado: #e5b64e;
+
+  /* Superfícies */
+  --fundo: #f7f3ee;            --card: #ffffff;
+  --fundo-2: #efe7de;          --fundo-3: #e6dccf;
+
+  /* Texto */
+  --texto: #242d21;            --texto-2: #5b6150;
+  --texto-3: #5f6357;          --texto-inverso: #f7f3ee;
+
+  /* Bordas: dois papéis distintos (DIRECAO.md, 2.2).
+     --borda é o fio de separação, decorativo: separador de linha de lista e
+     aresta de cartão. --borda-forte é o contorno estrutural, que precisa de
+     3:1: campo, botão secundário, aba, horário livre, célula de calendário e
+     separador de coluna da grade. O nude #d3b9a4 sai do papel de borda, onde
+     nunca funcionou (1,87:1), e volta a ser só cor de marca. */
+  --borda: #e2d8c9;            --borda-forte: #94826b;
+
+  /* Ação e foco */
+  --acao: #3a452b;             --acao-hover: #2f3823;
+  --acao-texto: #f7f3ee;       --foco: #e5b64e;
+
+  /* Semântica */
+  --ok: #4f7a4a;               --ok-suave: #e9f0e6;
+  --alerta: #8a6408;           --alerta-suave: #f8efd8;
+  --erro: #a23b2a;             --erro-suave: #f6e6e2;
+  --info: #4c6a7a;             --info-suave: #e6edf1;
+  --dourado-suave: #faf1d6;    --oliva-suave: #e8ebe2;
+
+  /* Status do serviço */
+  --st-aguardando: #85634a;    --st-confirmado: #3a452b;
+  --st-a-caminho: #4c6a7a;     --st-em-andamento: #e5b64e;
+  --st-em-andamento-suave: #faf1d6;
+  --st-concluido: #4f7a4a;     --st-reagendado: #8a6408;
+  --st-cancelado: #6b6f62;     --st-nao-realizado: #a23b2a;
+  --st-atrasado: #a23b2a;
+
+  /* Setores: a cor que identifica o tipo de serviço (DIRECAO.md, 2.3). Passam
+     a carregar informação (faixa de 4 px no cartão, bolinha de 8 px na linha,
+     barra de 3 px no bloco da grade), então valem 3:1 contra a superfície. */
+  --set-mov: #3a452b;  --set-ent: #8c6a4a;  --set-dec: #9a7b3f;
+  --set-flo: #638556;  --set-pai: #6b7d3a;  --set-cor: #5f7a8a;
+  --set-pos: #7a6a5a;  --set-com: #a17f60;  --set-fin: #7e8175;
+
+  /* Carros: fundo do círculo da inicial (.chip-carro .inicial, .parada-num) com
+     --texto-inverso por cima em 13 px, então todos têm 4,5:1 ou mais sobre o
+     texto (medido no claro: 9,20 / 5,00 / 5,58 / 4,87 / 5,21). */
+  --carro-1: #3a452b;  --carro-2: #836246;  --carro-3: #4a6575;
+  --carro-4: #8a6408;  --carro-5: #4c6a7a;
+
+  /* Tipografia: uma família só, Inter, variável de 400 a 700 (decisão final do
+     diretor; a seção 1 da DIRECAO.md propunha Source Sans 3). A Playfair saiu
+     do app inteiro, inclusive do login, porque o dono reclamou da leitura.
+     Atenção: os algarismos da Inter são proporcionais por padrão, então toda
+     hora, data, contador e coluna de número precisa de
+     font-variant-numeric: tabular-nums declarado. As 33 declarações que já
+     existem nas folhas de estilo ficam: não remova nenhuma. */
+  --fonte-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* O --fonte-titulo saiu no lote 6, como a DIRECAO.md 1.3 previu: o último
+     "font-family: var(--fonte-titulo)" foi apagado de css/agenda.css e de
+     css/telas.css, e com ele o token. A interface tem uma família só. */
+
+  /* Escala (DIRECAO.md, 1.2): sete degraus, nenhuma tela usa mais de cinco.
+     12 etiqueta em caixa alta e dia da semana; 13 hora da calha e metadado;
+     14 texto de interface, botão e campo; 16 nome do cliente, título de
+     cartão e botão de horário; 20 título de seção e navegação de data;
+     28 título de tela; 32 só a frase do painel oliva do login.
+     Os apelidos de compatibilidade (--t-15, --t-17, --t-24, --t-26 e --t-40)
+     saíram no lote 6: o último uso deles foi reescrito em css/agenda.css e
+     css/telas.css. A escala é esta, e só esta. */
+  --t-12: 12px; --t-13: 13px; --t-14: 14px; --t-16: 16px;
+  --t-20: 20px; --t-28: 28px; --t-32: 32px;
+
+  /* Espaços */
+  --e1: 4px; --e2: 8px; --e3: 12px; --e4: 16px; --e5: 24px; --e6: 32px; --e7: 48px;
+
+  /* Raios (DIRECAO.md, 2.7): botão e campo em 8, cartão e folha em 10, o
+     grande cai de 20 para 16. Raio grande em cartão largo é o que dá cara de
+     aplicativo de celular esticado. */
+  --r-s: 8px; --r-m: 10px; --r-g: 16px; --r-pill: 999px;
+
+  /* Sombras (DIRECAO.md, 2.6): quase zero. Cartão em repouso não tem sombra,
+     tem borda. A --sombra-1 só entra na passagem do mouse. */
+  --sombra-1: 0 1px 3px rgba(36, 45, 33, 0.06);
+  --sombra-2: 0 8px 24px rgba(36, 45, 33, 0.10);
+  --sombra-3: 0 24px 64px rgba(36, 45, 33, 0.16);
+
+  /* Medidas */
+  --alt-cab: 56px; --alt-nav: 64px; --alt-toque: 48px;
+  --larg-lateral: 240px; --larg-lateral-min: 64px; --larg-painel: 420px;
+  --pph: 64px; --gutter: 44px;
+  --seg-topo: env(safe-area-inset-top, 0px); --seg-base: env(safe-area-inset-bottom, 0px);
+  --seg-esq: env(safe-area-inset-left, 0px); --seg-dir: env(safe-area-inset-right, 0px);
+  --transicao: 180ms cubic-bezier(0.32, 0.72, 0.28, 1);
+
+  /* Extras (ver cabeçalho do arquivo) */
+  --veu: rgba(36, 45, 33, 0.45);
+  --toast-fundo: #242d21;
+  --toast-texto: #f7f3ee;
+  --toast-acao: #e5b64e;
+  --hachura: rgba(211, 185, 164, 0.35);
+  --seta-selecao: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235b6150' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+/* Tema escuro: só os tokens que mudam. O app aplica data-tema; o CSS só conhece o atributo. */
+:root[data-tema="escuro"] {
+  --fundo: #1c231a;            --card: #242d21;
+  --fundo-2: #2c3628;          --fundo-3: #354131;
+  --texto: #efe7de;            --texto-2: #c9c2b6;
+  --texto-3: #9a9d90;          --texto-inverso: #1c231a;
+  --alerta: #d4a23a;           --st-reagendado: #d4a23a;
+  --st-aguardando: #b99a7f;    --st-cancelado: #9a9d90;
+  /* Semânticas e status como texto no escuro. O .chip-status pinta o texto
+     com a cor do status sobre o --card, e no escuro os valores do claro
+     reprovavam: confirmado 1,40:1 (invisível), não realizado e atrasado
+     2,17:1, a caminho 2,48:1, concluído 2,86:1. Mesma matiz, mais claros,
+     todos entre 5,09 e 5,13:1 no cartão e 4,50 a 4,53:1 no --fundo-2. Onde a
+     cor é fundo (chip de atrasado), o texto escuro por cima fica em 5,7:1. */
+  --ok: #74a76e;               --erro: #db8374;
+  --info: #809fb0;
+  --st-confirmado: #8ba36b;    --st-concluido: #74a76e;
+  --st-a-caminho: #809fb0;     --st-nao-realizado: #db8374;
+  --st-atrasado: #db8374;
+  /* Carros no escuro: --texto-inverso vira #1c231a, então os tons sobem para
+     manter 4,5:1 (medido: 5,73 / 6,87 / 7,02 / 6,92 / 5,74). */
+  --carro-1: #8fa07a;          --carro-2: #c9a27f;
+  --carro-3: #8fb0c2;          --carro-4: #d4a23a;
+  --carro-5: #7f9fb0;
+  /* Setores no escuro: os valores do claro reprovam contra o cartão #242d21
+     (mov 1,40, ent 2,90, pos 2,74) e nenhum deles alcança 4,5:1 contra o
+     --texto-inverso escuro, que é o que o avatar coloca por cima. Mesma
+     matiz, só mais claros: 4,08 a 4,14 no cartão, 4,60 a 4,67 no fundo. */
+  --set-mov: #7a925b;  --set-ent: #aa825d;  --set-dec: #a68444;
+  --set-flo: #6e9460;  --set-pai: #7d9244;  --set-cor: #728e9e;
+  --set-pos: #998774;  --set-com: #a48365;  --set-fin: #888b7f;
+  --borda: #404d3c;            --borda-forte: #78806f;
+  --acao: #8fa07a;             --acao-hover: #a3b48c;
+  --acao-texto: #1c231a;
+  --oliva-suave: #2f3a2b;      --dourado-suave: #3d3520;
+  --ok-suave: #26331f;         --alerta-suave: #3b3118;
+  --erro-suave: #3a2420;       --info-suave: #23303a;
+  --st-em-andamento-suave: #3d3520;
+  /* Mesma geometria do claro, alfa maior porque no escuro a sombra some. */
+  --sombra-1: 0 1px 3px rgba(12, 16, 10, 0.24);
+  --sombra-2: 0 8px 24px rgba(12, 16, 10, 0.36);
+  --sombra-3: 0 24px 64px rgba(12, 16, 10, 0.48);
+  --veu: rgba(28, 35, 26, 0.6);
+  --toast-fundo: #efe7de;
+  --toast-texto: #1c231a;
+  --toast-acao: #3a452b;
+  --hachura: rgba(211, 185, 164, 0.18);
+  --seta-selecao: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23c9c2b6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+/* Densidade compacta (desktop): alvos de 40 px, grade de 56 px por hora, itens de 44 px. */
+@media (min-width: 1024px) {
+  :root[data-densidade="compacta"] {
+    --alt-toque: 40px;
+    --pph: 56px;
+  }
+}
