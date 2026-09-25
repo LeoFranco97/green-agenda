@@ -13,7 +13,7 @@
    Nunca devolve index.html para requisição que não seja de navegação.
    VERSAO é escrita à mão a cada deploy. */
 
-const VERSAO = 'green-agenda-v7';
+const VERSAO = 'green-agenda-v8';
 /* -v7 desde 25/09/2026: esquema 5 (equipe oficial, perfil financeiro), o
    seletor de conta na tela de entrar e a publicação no GitHub Pages
    (scripts/publicar.sh), que serve o app em subcaminho: por isso todo
