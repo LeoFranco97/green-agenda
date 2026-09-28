@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Green Agenda no celular</title>
+  <!-- Moldura de demonstração: mostra o app dentro de um celular desenhado,
+       para apresentar no computador ou no painel do Claude. Não entra na
+       dist nem nas lojas. Abra em http://localhost:8793/celular.html -->
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle at 30% 20%, #3f4b30, #242d21 70%);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #d3b9a4;
+    }
+    .cena { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 24px; }
+    .aparelho {
+      position: relative; width: 390px; height: 844px;
+      background: #0b0d09; border-radius: 54px;
+      padding: 14px; box-sizing: border-box;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, .55), inset 0 0 0 2px #2a2f26;
+    }
+    .tela {
+      width: 100%; height: 100%; border: 0; border-radius: 42px; background: #f6f3ee; display: block;
+    }
+    .ilha {
+      position: absolute; top: 26px; left: 50%; transform: translateX(-50%);
+      width: 118px; height: 34px; background: #0b0d09; border-radius: 20px; pointer-events: none;
+    }
+    .botao { position: absolute; background: #1a1d17; border-radius: 3px; }
+    .botao.silencio { left: -3px; top: 150px; width: 3px; height: 30px; }
+    .botao.volume { left: -3px; top: 200px; width: 3px; height: 60px; }
+    .botao.volume2 { left: -3px; top: 275px; width: 3px; height: 60px; }
+    .botao.lateral { right: -3px; top: 220px; width: 3px; height: 90px; }
+    .legenda { font-size: 14px; letter-spacing: .06em; text-transform: uppercase; opacity: .8; }
+    .legenda a { color: #e5b64e; text-decoration: none; }
+    /* Em janela baixa o aparelho encolhe a partir do centro, para nunca cortar
+       o topo nem o fundo; a margem negativa compensa o espaço que a escala
+       deixa em volta. */
+    @media (max-height: 940px) { .aparelho { transform: scale(.85); transform-origin: center; margin: -63px 0; } }
+    @media (max-height: 820px) { .aparelho { transform: scale(.75); margin: -105px 0; } }
+    @media (max-height: 720px) { .aparelho { transform: scale(.65); margin: -148px 0; } }
+    @media (max-height: 620px) { .aparelho { transform: scale(.55); margin: -190px 0; } }
+  </style>
+</head>
+<body>
+  <div class="cena">
+    <div class="aparelho">
+      <span class="botao silencio"></span>
+      <span class="botao volume"></span>
+      <span class="botao volume2"></span>
+      <span class="botao lateral"></span>
+      <iframe class="tela" src="./index.html#/hoje?ver=quadro" title="Green Agenda" allow="clipboard-write"></iframe>
+      <span class="ilha"></span>
+    </div>
+    <p class="legenda">Green Agenda, demonstração em celular. <a href="./index.html">Abrir em tela cheia</a></p>
+  </div>
+</body>
+</html>
